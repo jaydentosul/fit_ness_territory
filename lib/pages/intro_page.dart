@@ -36,6 +36,7 @@ class IntroPage extends StatelessWidget {
             Text(
               'What the fuck is going on',
               style: TextStyle(
+                fontSize: 16,
                 color: Theme.of(context).colorScheme.inversePrimary,
               ),
             ),
@@ -43,10 +44,11 @@ class IntroPage extends StatelessWidget {
             SizedBox(height: 10), //for spacing
 
             //Button
-            MyButton(
+            ButtonOne(
               onTap: () => Navigator.pushNamed(context, '/login_page'),
               buttonIcon: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Start',
@@ -56,7 +58,7 @@ class IntroPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8),
-                  Icon(Icons.arrow_forward)
+                  Icon(Icons.arrow_forward),
                 ],
               ),
             )

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class MyButton extends StatelessWidget{
+//----------------------------- INTRO BUTTON ------------------------------------
+class ButtonOne extends StatelessWidget{
   final void Function()? onTap;//on tap function
   final Widget buttonIcon; //for displaying the icon on the button
 
-  const MyButton({
+  const ButtonOne({
     super.key,
     required this.onTap,
     required this.buttonIcon
   });
-
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +18,42 @@ class MyButton extends StatelessWidget{
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.tertiary,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.fromLTRB(40, 15, 40, 15),
+        padding: const EdgeInsets.fromLTRB(40, 13, 40, 13),
         child: buttonIcon,
       ),
     );
-  }}
+  }
+}
+
+//----------------------------- LOGIN BUTTONS ----------------------------------
+class ButtonTwo extends StatelessWidget {
+  final void Function()? onTap;//on tap function
+  final Widget buttonIcon; //for displaying the icon on the button
+
+  //constructor
+  const ButtonTwo({
+    super.key,
+    required this.onTap,
+    required this.buttonIcon
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        padding: const EdgeInsets.fromLTRB(40, 13, 40, 13),
+        alignment: Alignment.center,
+        child: buttonIcon,
+      ),
+    );
+  }
+
+}
