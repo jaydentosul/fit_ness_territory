@@ -1,4 +1,4 @@
-import 'package:fit_ness_territory/components/my_button.dart';
+import 'package:fit_ness_territory/components/my_buttons.dart';
 import 'package:flutter/material.dart';
 
 class IntroPage extends StatelessWidget {
@@ -45,7 +45,7 @@ class IntroPage extends StatelessWidget {
 
             //Button
             ButtonOne(
-              onTap: () => Navigator.pushNamed(context, '/login_page'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/login_page'),
               buttonIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,

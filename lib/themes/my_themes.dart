@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 ThemeData myThemes = ThemeData(
-  //Color Palette
+  /*
+  COLOR PALETTE
+  We can change this later on for a better color palette
+   */
   colorScheme: ColorScheme.light(
     surface: Colors.grey.shade300,
     primary: Colors.grey.shade200,

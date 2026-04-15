@@ -1,4 +1,4 @@
-import 'package:fit_ness_territory/components/my_button.dart';
+import 'package:fit_ness_territory/components/my_buttons.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,8 +24,9 @@ class _LoginPageState extends State<LoginPage> {
         child: Padding(
           padding: const EdgeInsets.all(50),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            // mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Spacer(flex: 1),
 
               //LOGO ICON
               Image.asset(
@@ -112,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   Expanded( // LOGIN BUTTON
                     child: ButtonTwo(
-                        onTap: () => Navigator.pushNamed(context, '/home_page'),
+                        onTap: () => Navigator.pushReplacementNamed(context, '/home_page'),
                         buttonIcon: Text(
                           'Login',
                           style: TextStyle(
@@ -122,9 +123,11 @@ class _LoginPageState extends State<LoginPage> {
                         )
                     ),
                   ),
-
                 ]
               ),
+
+              const Spacer(flex: 2),
+
             ],
           ),
         ),
