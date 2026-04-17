@@ -78,7 +78,7 @@ class StartRunButton extends StatelessWidget{
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary, //--> button color
+            color: Theme.of(context).colorScheme.tertiary,
             borderRadius: BorderRadius.circular(20)
           ),
           padding: EdgeInsets.all(8),

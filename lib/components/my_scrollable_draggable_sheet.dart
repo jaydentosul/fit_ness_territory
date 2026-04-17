@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'my_buttons.dart';
 
 class MyScrollableDraggableSheet extends StatelessWidget{
@@ -10,9 +9,11 @@ class MyScrollableDraggableSheet extends StatelessWidget{
     return Stack(
       children: [
         DraggableScrollableSheet(
-          initialChildSize: 0.35, //initial start of the sheet
-          minChildSize: 0.25,     //lowest length to drag to
-          maxChildSize: 0.8,      //highest length to drag to
+          initialChildSize: 0.35,   //initial start of the sheet
+          minChildSize: 0.25,       //lowest length to drag to
+          maxChildSize: 0.85,       //highest length to drag to
+          snap: true,
+          snapSizes: [0.35, 0.85],
           builder: (context, scrollController) {
             return Container(
               decoration: BoxDecoration(
@@ -71,10 +72,11 @@ class MyScrollableDraggableSheet extends StatelessWidget{
           }
         ),
 
+        //START-RUN BUTTON
         Positioned(
             bottom: 0, right: 0, left: 0,//bounds
             child: StartRunButton(
-              onTap: () {},
+              onTap: () {},// ---> starts the run will link later
             )
         ),
       ],

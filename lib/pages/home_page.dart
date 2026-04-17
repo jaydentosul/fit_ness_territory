@@ -14,6 +14,13 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         // foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Homepage Page'),
+        actions: [  // ---> friends button
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, 'my_friends_page'),
+            icon: Icon(Icons.people_alt_outlined),
+            iconSize: 28,
+          ),
+        ],
       ),
 
       body: Stack(
@@ -27,8 +34,8 @@ class HomePage extends StatelessWidget {
 
           const MyScrollableDraggableSheet(),  // ---> This is the Bottom draggable sheet
         ],
-
       ),
+
       drawer: MyDrawer(), // ---> This is the top left menu Drawer
     );
   }

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-
-
 /*
-This is where the setting stuff goes
-*/
+Add the friends sections here
+ */
 
-class SettingsPage extends StatelessWidget{
-  const SettingsPage({super.key});
+class MyFriendsPage extends StatelessWidget{
+  const MyFriendsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +14,7 @@ class SettingsPage extends StatelessWidget{
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('Settings Page'),
+        title: Text('My Friends Page'),
       ),
     );
   }

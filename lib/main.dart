@@ -1,6 +1,7 @@
 import 'package:fit_ness_territory/pages/home_page.dart';
 import 'package:fit_ness_territory/pages/intro_page.dart';
 import 'package:fit_ness_territory/pages/login_page.dart';
+import 'package:fit_ness_territory/pages/my_friends_page.dart';
 import 'package:fit_ness_territory/pages/my_profile_page.dart';
 import 'package:fit_ness_territory/pages/scoreboard_page.dart';
 import 'package:fit_ness_territory/pages/settings_page.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         '/my_profile_page': (context) => const MyProfilePage(),
         '/settings_page':   (context) => const SettingsPage(),
         '/scoreboard_page': (context) => const ScoreboardPage(),
+        'my_friends_page':  (context) => const MyFriendsPage(),
       },
 
     );
