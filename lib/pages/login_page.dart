@@ -69,11 +69,12 @@ class _LoginPageState extends State<LoginPage> {
 
               SizedBox(height: 10), //spacing
 
-              //ACCOUNT TEXT FIELD
+              //PASSWORD TEXT FIELD
               SizedBox(
                 height: 45,
                 child: TextField(
                   controller: getUserPass,
+                  obscureText: true, //hides the text
                   decoration: InputDecoration(
                       border: InputBorder.none,
                       filled: true,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../components/my_bottom_sheet.dart';
+import '../components/my_scrollable_draggable_sheet.dart';
 import '../components/my_drawer.dart';
 
 
@@ -20,12 +20,12 @@ class HomePage extends StatelessWidget {
         children: [
           //for the map
           Container(
-            color: Colors.grey,
+            color: Colors.yellow.shade200,
             child: Center(child: Text('This is for the Map\n'
                 'fingers crossed')),
           ),
 
-          const MyBottomSheet(),  // ---> This is the Bottom draggable sheet
+          const MyScrollableDraggableSheet(),  // ---> This is the Bottom draggable sheet
         ],
 
       ),

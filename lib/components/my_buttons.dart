@@ -55,5 +55,45 @@ class ButtonTwo extends StatelessWidget {
       ),
     );
   }
+}
+
+//---------------------------- START-RUN BUTTON ------------------------------
+class StartRunButton extends StatelessWidget{
+  final void Function()? onTap;
+
+  const StartRunButton({
+    super.key,
+    required this.onTap
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 100,
+      padding: EdgeInsets.all(15),
+      color: Theme.of(context).colorScheme.secondary,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.tertiary, //--> button color
+            borderRadius: BorderRadius.circular(20)
+          ),
+          padding: EdgeInsets.all(8),
+          alignment: Alignment.center,
+          child: Text(
+            'Start Run',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 40,
+              color: Colors.green.shade600
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
 }
