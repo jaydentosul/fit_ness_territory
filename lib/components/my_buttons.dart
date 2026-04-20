@@ -70,8 +70,8 @@ class StartRunButton extends StatelessWidget{
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 100,
-      padding: EdgeInsets.all(15),
+      height: 110,
+      padding: EdgeInsets.fromLTRB(15, 15, 15, 25),
       color: Theme.of(context).colorScheme.secondary,
       child: GestureDetector(
         onTap: onTap,
