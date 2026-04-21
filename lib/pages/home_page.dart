@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
         title: Text('Homepage Page'),
         actions: [  // ---> friends button
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, 'my_friends_page'),
+            onPressed: () => Navigator.pushNamed(context, '/my_friends_page'),
             icon: Icon(Icons.people_alt_outlined),
             iconSize: 28,
           ),
