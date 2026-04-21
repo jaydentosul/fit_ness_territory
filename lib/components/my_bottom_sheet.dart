@@ -6,8 +6,8 @@ class MyBottomSheet extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.30,//initial start of the sheet
-      minChildSize: 0.15,
+      initialChildSize: 0.10,//initial start of the sheet
+      minChildSize: 0.02,
       maxChildSize: 0.8,
       builder: (context, scrollController) {
         return Container(
@@ -55,7 +55,7 @@ class MyBottomSheet extends StatelessWidget{
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 10)
             ],
           ),
         );
