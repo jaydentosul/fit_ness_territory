@@ -95,5 +95,25 @@ class StartRunButton extends StatelessWidget{
       ),
     );
   }
+}
+
+//--------------------------- RESET LOCATION BUTTON ----------------------------
+class ResetLocationButton extends StatelessWidget{
+  final VoidCallback onPressed;
+
+  const ResetLocationButton({
+    super.key,
+    required this.onPressed,
+  });
+
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: Colors.blue,
+      onPressed: onPressed,
+      child: Icon(Icons.my_location_outlined),
+    );
+  }
 
 }

@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/my_profile_page': (context) => const MyProfilePage(),
         '/settings_page':   (context) => const SettingsPage(),
         '/scoreboard_page': (context) => const ScoreboardPage(),
-        '/my_friends_page':  (context) => const MyFriendsPage(),
+        '/my_friends_page': (context) => const MyFriendsPage(),
       },
 
     );

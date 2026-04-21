@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.fit_ness_territory"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 37
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
