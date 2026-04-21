@@ -1,3 +1,5 @@
+import 'package:fit_ness_territory/components/run_timer.dart';
+import 'package:fit_ness_territory/modes/modes.dart';
 import 'package:flutter/material.dart';
 import '../components/my_buttons.dart';
 import '../components/my_scrollable_draggable_sheet.dart';
@@ -15,7 +17,85 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final DraggableScrollableController _sheetController = DraggableScrollableController();
   final GlobalKey<GMapState> _mapKey = GlobalKey<GMapState>();
+  final RunTimer _runTimer = RunTimer();
+
   double _sheetSize = 0.35;
+  RunState runState = RunState.idle;
+  Duration elapsed = Duration.zero;
+
+  void _startRun() {
+    if (runState == RunState.idle) {
+      setState(() {
+        runState = RunState.running;
+        elapsed = Duration.zero; //starts timer
+      });
+
+      //resets and starts the timer
+      _runTimer.reset();
+      _runTimer.start((time) {
+        setState(() {
+          elapsed = time;
+        });
+      });
+      
+      _sheetController.animateTo( //animates the sheet when running
+        0.25,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _pauseRun() {
+    //Pausing
+    if (runState == RunState.running) {
+      _runTimer.pause();
+
+      setState(() {
+        runState = RunState.pause;
+      });
+
+    //Pressing play again
+    } else if ( runState == RunState.pause) {
+      setState(() {
+        runState = RunState.running;
+      });
+
+      _runTimer.start((time) {
+        setState(() {
+          elapsed = time;
+        });
+      });
+
+      _sheetController.animateTo( //animates the sheet when running
+        0.25,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _stopRun() {
+    _runTimer.reset();
+
+    setState(() {
+      runState = RunState.idle;
+      elapsed = Duration.zero;
+    });
+
+    _sheetController.animateTo( //animates the sheet when running
+      0.35,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    _runTimer.pause();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -69,15 +149,21 @@ class _HomePageState extends State<HomePage> {
 
           //DRAGGABLE SCROLLABLE SHEET
           MyScrollableDraggableSheet(  // ---> This is the Bottom draggable sheet
-            controller: _sheetController
+            controller: _sheetController,
+            runState: runState,
+            onStartRun: _startRun,
+            onStopRun: _stopRun,
+            onPauseRun: _pauseRun,
           ),
 
           //START-RUN BUTTON
           Positioned(
-              bottom: 0, right: 0, left: 0,//bounds
-              child: StartRunButton(
-                onTap: () {},// ---> starts the run will link later
-              )
+            bottom: 0, right: 0, left: 0,//bounds
+            child: StartRunButton(
+              onTap: _startRun,// ---> starts the run will link later
+              runState: runState,
+              elapsed: elapsed,
+            ),
           ),
         ],
       ),

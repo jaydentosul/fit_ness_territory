@@ -15,8 +15,11 @@ class GMap extends StatefulWidget{
 
 class GMapState extends State<GMap> {
   static const _initialCameraPosition = CameraPosition(
-    target: LatLng(-36.850202, 174.767688),
-    zoom: 12.5,
+    target: LatLng(
+      -36.850202 - 0.001,
+      174.767688,
+    ),
+    zoom: 15.0,
   );
 
   GoogleMapController? _googleMapController;
