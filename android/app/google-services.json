@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "745746659815",
+    "project_id": "fitness-territory-894ce",
+    "storage_bucket": "fitness-territory-894ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745746659815:android:9c6105d9e9d29380396542",
+        "android_client_info": {
+          "package_name": "com.example.fit_ness_territory"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMFoZauwflUL_MkOcQTRiaPU0Vaey52xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

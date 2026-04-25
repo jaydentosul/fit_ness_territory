@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/my_buttons.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,8 @@ class MyScrollableDraggableSheet extends StatelessWidget{
   final VoidCallback onStopRun;
   final VoidCallback onPauseRun;
   final RunState runState;
+  final Duration elapsed; // current run time
+  final Duration lastRun;
 
   const MyScrollableDraggableSheet({
     super.key,
@@ -16,10 +20,26 @@ class MyScrollableDraggableSheet extends StatelessWidget{
     required this.onStartRun,
     required this.onStopRun,
     required this.onPauseRun,
+    required this.elapsed,
+    required this.lastRun,
   });
+
+  String formatTime(Duration time) {
+    final mins = time.inMinutes.toString().padLeft(2, '0');
+    final secs = (time.inSeconds % 60).toString().padLeft(2, '0');
+    return "$mins:$secs";
+  }
+
+  String formatSeconds(int seconds) {
+    final mins = (seconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return "$mins:$secs";
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return DraggableScrollableSheet(
       controller: controller,
       initialChildSize: 0.35, //initial start of the sheet
@@ -96,13 +116,69 @@ class MyScrollableDraggableSheet extends StatelessWidget{
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 25),
 
               /*
                 More UI stuff for player Info
                */
 
-              // const SizedBox(height: 800,)
+              // shows last run and best run at the bottom of the sheet on player info
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Text(
+        runState == RunState.running || runState == RunState.pause
+            ? "Current Run: ${formatTime(elapsed)}"
+            : "Last Run: ${lastRun == Duration.zero ? '--:--' : formatTime (lastRun)}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: user == null
+                    ? const Text(
+                  "Best Run: Not logged in",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black54,
+                  ),
+                )
+                    : StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance //gets the best run from firebase (change to territory later)
+                      .collection('users')
+                      .doc(user.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return const Text(
+                        "Best Run: --:--",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black54,
+                        ),
+                      );
+                    }
+
+                    final data = snapshot.data!.data() as Map<String, dynamic>;
+                    final bestRun = data['bestRun'] ?? 0;
+
+                    return Text(
+                      "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(bestRun)}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black54,
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 10),
             ],
           ),
 

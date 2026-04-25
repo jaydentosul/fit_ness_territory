@@ -22,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   double _sheetSize = 0.35;
   RunState runState = RunState.idle;
   Duration elapsed = Duration.zero;
+  Duration lastRun = Duration.zero;
 
   void _startRun() {
     if (runState == RunState.idle) {
@@ -74,12 +75,19 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-
-  void _stopRun() {
-    _runTimer.reset();
+// when run stops, we can save everything here (timer + later map data)
+  void _stopRun() async {
+    await _runTimer.saveRun(); // saves run time to firebase
 
     setState(() {
+      lastRun = elapsed; // stores last run
       runState = RunState.idle;
+    });
+
+    _runTimer.reset();
+
+
+    setState(() {
       elapsed = Duration.zero;
     });
 
@@ -148,12 +156,15 @@ class _HomePageState extends State<HomePage> {
           ),
 
           //DRAGGABLE SCROLLABLE SHEET
+
           MyScrollableDraggableSheet(  // ---> This is the Bottom draggable sheet
             controller: _sheetController,
             runState: runState,
             onStartRun: _startRun,
             onStopRun: _stopRun,
             onPauseRun: _pauseRun,
+            elapsed: elapsed,
+            lastRun: lastRun,
           ),
 
           //START-RUN BUTTON
