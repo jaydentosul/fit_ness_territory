@@ -23,8 +23,15 @@ class _HomePageState extends State<HomePage> {
   RunState runState = RunState.idle;
   Duration elapsed = Duration.zero;
 
-  void _startRun() {
+  Future<void> _startRun() async {
     if (runState == RunState.idle) {
+      final bool canStartRun =
+          await _mapKey.currentState?.prepareRunFromSelectedTerritory() ?? false;
+
+      if (!canStartRun) {
+        return;
+      }
+
       setState(() {
         runState = RunState.running;
         elapsed = Duration.zero; //starts timer
@@ -37,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           elapsed = time;
         });
       });
-      
+
       _sheetController.animateTo( //animates the sheet when running
         0.25,
         duration: const Duration(milliseconds: 300),
@@ -55,7 +62,7 @@ class _HomePageState extends State<HomePage> {
         runState = RunState.pause;
       });
 
-    //Pressing play again
+      //Pressing play again
     } else if ( runState == RunState.pause) {
       setState(() {
         runState = RunState.running;
@@ -138,8 +145,8 @@ class _HomePageState extends State<HomePage> {
           Positioned(
             right: 16,
             bottom:
-              buttonBottom > screenHeight/2 //if button > halfScreen
-              ? 10 : buttonBottom,          //then 10 else stick to sheet
+            buttonBottom > screenHeight/2 //if button > halfScreen
+                ? 10 : buttonBottom,          //then 10 else stick to sheet
             child: ResetLocationButton(
               onPressed: () {
                 _mapKey.currentState?.resetCamera();

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 
-
 /*
 This is where we can build the UI for the LeaderBoard
 */
