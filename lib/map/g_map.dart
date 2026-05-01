@@ -35,6 +35,8 @@ class GMapState extends State<GMap>
     zoom: 11.8,
   );
 
+  static const double _allowedRouteDistanceMetres = 40.0;
+
   GoogleMapController? _googleMapController;
   StreamSubscription<Position>? _positionStream;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _territoryRecordsStream;
@@ -45,6 +47,7 @@ class GMapState extends State<GMap>
   bool _isTracking = false;
   bool _routesAreLoading = false;
   bool _territoryRecordsLoaded = false;
+  bool _isOutsideTerritory = false;
 
   final List<LatLng> _playerRunPath = [];
 
@@ -785,6 +788,96 @@ class GMapState extends State<GMap>
     return true;
   }
 
+  double _distanceFromRouteInMetres
+      (
+      LatLng userPosition,
+      List<LatLng> routePoints,
+      )
+  {
+    if (routePoints.isEmpty)
+    {
+      return double.infinity;
+    }
+
+    double closestDistance = double.infinity;
+
+    for (final point in routePoints)
+    {
+      final double distance = Geolocator.distanceBetween
+        (
+        userPosition.latitude,
+        userPosition.longitude,
+        point.latitude,
+        point.longitude,
+      );
+
+      if (distance < closestDistance)
+      {
+        closestDistance = distance;
+      }
+    }
+
+    return closestDistance;
+  }
+
+  void _checkTerritoryBoundary
+      (
+      LatLng userPosition,
+      )
+  {
+    final Territory? selectedTerritory = _getSelectedTerritory();
+
+    if (selectedTerritory == null)
+    {
+      return;
+    }
+
+    final List<LatLng> routePoints = _getRoutePoints
+      (
+      selectedTerritory,
+    );
+
+    final double distanceFromRoute = _distanceFromRouteInMetres
+      (
+      userPosition,
+      routePoints,
+    );
+
+    final bool isNowOutside =
+        distanceFromRoute > _allowedRouteDistanceMetres;
+
+    if (isNowOutside && !_isOutsideTerritory)
+    {
+      setState
+        (
+            ()
+        {
+          _isOutsideTerritory = true;
+        },
+      );
+
+      _showTopMessage
+        (
+        'Warning: You left the territory route.',
+      );
+    }
+    else if (!isNowOutside && _isOutsideTerritory)
+    {
+      setState
+        (
+            ()
+        {
+          _isOutsideTerritory = false;
+        },
+      );
+
+      _showTopMessage
+        (
+        'You are back inside the territory route.',
+      );
+    }
+  }
+
   Future<bool> startTracking() async
   {
     final bool hasPermission = await _checkLocationPermission();
@@ -801,6 +894,7 @@ class GMapState extends State<GMap>
           ()
       {
         _isTracking = true;
+        _isOutsideTerritory = false;
         _playerRunPath.clear();
       },
     );
@@ -833,6 +927,11 @@ class GMapState extends State<GMap>
               newPosition,
             );
           },
+        );
+
+        _checkTerritoryBoundary
+          (
+          newPosition,
         );
 
         _googleMapController?.animateCamera
@@ -884,6 +983,7 @@ class GMapState extends State<GMap>
           ()
       {
         _isTracking = false;
+        _isOutsideTerritory = false;
         _playerRunPath.clear();
       },
     );
@@ -1394,6 +1494,40 @@ class GMapState extends State<GMap>
             _loadRealTerritoryRoutes();
           },
         ),
+
+        if (_isOutsideTerritory)
+          Positioned
+            (
+            top: 90,
+            left: 20,
+            right: 20,
+            child: Container
+              (
+              padding: const EdgeInsets.all
+                (
+                14,
+              ),
+              decoration: BoxDecoration
+                (
+                color: Colors.red,
+                borderRadius: BorderRadius.circular
+                  (
+                  16,
+                ),
+              ),
+              child: const Text
+                (
+                'Warning: You are outside the territory route',
+                textAlign: TextAlign.center,
+                style: TextStyle
+                  (
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
 
         Positioned
           (
