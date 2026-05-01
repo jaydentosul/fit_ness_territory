@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
 import 'package:flutter/material.dart';
@@ -7,14 +9,19 @@ import '../components/my_drawer.dart';
 import '../map/g_map.dart';
 
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget
+{
+  const HomePage
+      ({
+    super.key,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+{
   final DraggableScrollableController _sheetController = DraggableScrollableController();
   final GlobalKey<GMapState> _mapKey = GlobalKey<GMapState>();
   final RunTimer _runTimer = RunTimer();
@@ -22,145 +29,380 @@ class _HomePageState extends State<HomePage> {
   double _sheetSize = 0.35;
   RunState runState = RunState.idle;
   Duration elapsed = Duration.zero;
+  Duration lastRun = Duration.zero;
+  String currentUsername = 'Loading...';
 
-  void _startRun() {
-    if (runState == RunState.idle) {
-      setState(() {
-        runState = RunState.running;
-        elapsed = Duration.zero; //starts timer
-      });
+  Future<void> _loadCurrentUsername() async
+  {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null)
+    {
+      setState
+        (
+            ()
+        {
+          currentUsername = 'Guest Runner';
+        },
+      );
+
+      return;
+    }
+
+    final DocumentSnapshot<Map<String, dynamic>> userDoc =
+    await FirebaseFirestore.instance
+        .collection
+      (
+      'users',
+    )
+        .doc
+      (
+      currentUser.uid,
+    )
+        .get();
+
+    final Map<String, dynamic>? userData = userDoc.data();
+
+    if (userData == null)
+    {
+      setState
+        (
+            ()
+        {
+          currentUsername = currentUser.email ?? 'Guest Runner';
+        },
+      );
+
+      return;
+    }
+
+    final String? username = userData['username'];
+
+    setState
+      (
+          ()
+      {
+        currentUsername = username == null || username.trim().isEmpty
+            ? currentUser.email ?? 'Guest Runner'
+            : username;
+      },
+    );
+  }
+
+  Future<String> _getCurrentUsername() async
+  {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null)
+    {
+      return 'Guest Runner';
+    }
+
+    final DocumentSnapshot<Map<String, dynamic>> userDoc =
+    await FirebaseFirestore.instance
+        .collection
+      (
+      'users',
+    )
+        .doc
+      (
+      currentUser.uid,
+    )
+        .get();
+
+    final Map<String, dynamic>? userData = userDoc.data();
+
+    if (userData == null)
+    {
+      return currentUser.email ?? 'Guest Runner';
+    }
+
+    final String? username = userData['username'];
+
+    if (username == null || username.trim().isEmpty)
+    {
+      return currentUser.email ?? 'Guest Runner';
+    }
+
+    return username;
+  }
+
+  Future<void> _startRun() async
+  {
+    if (runState == RunState.idle)
+    {
+      final bool canStartRun =
+          await _mapKey.currentState?.prepareRunFromSelectedTerritory() ?? false;
+
+      if (!canStartRun)
+      {
+        return;
+      }
+
+      setState
+        (
+            ()
+        {
+          runState = RunState.running;
+          elapsed = Duration.zero; //starts timer
+        },
+      );
 
       //resets and starts the timer
       _runTimer.reset();
-      _runTimer.start((time) {
-        setState(() {
-          elapsed = time;
-        });
-      });
-      
-      _sheetController.animateTo( //animates the sheet when running
+      _runTimer.start
+        (
+            (time)
+        {
+          setState
+            (
+                ()
+            {
+              elapsed = time;
+            },
+          );
+        },
+      );
+
+      _sheetController.animateTo //animates the sheet when running
+        (
         0.25,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration
+          (
+          milliseconds: 300,
+        ),
         curve: Curves.easeOut,
       );
     }
   }
 
-  void _pauseRun() {
+  void _pauseRun()
+  {
     //Pausing
-    if (runState == RunState.running) {
+    if (runState == RunState.running)
+    {
       _runTimer.pause();
+      _mapKey.currentState?.pauseTracking();
 
-      setState(() {
-        runState = RunState.pause;
-      });
+      setState
+        (
+            ()
+        {
+          runState = RunState.pause;
+        },
+      );
 
-    //Pressing play again
-    } else if ( runState == RunState.pause) {
-      setState(() {
-        runState = RunState.running;
-      });
+      //Pressing play again
+    }
+    else if (runState == RunState.pause)
+    {
+      _mapKey.currentState?.resumeTracking();
 
-      _runTimer.start((time) {
-        setState(() {
-          elapsed = time;
-        });
-      });
+      setState
+        (
+            ()
+        {
+          runState = RunState.running;
+        },
+      );
 
-      _sheetController.animateTo( //animates the sheet when running
+      _runTimer.start
+        (
+            (time)
+        {
+          setState
+            (
+                ()
+            {
+              elapsed = time;
+            },
+          );
+        },
+      );
+
+      _sheetController.animateTo //animates the sheet when running
+        (
         0.25,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration
+          (
+          milliseconds: 300,
+        ),
         curve: Curves.easeOut,
       );
     }
   }
 
-  void _stopRun() {
+  // when run stops, we can save everything here (timer + later map data)
+  Future<void> _stopRun() async
+  {
+    _mapKey.currentState?.stopTracking();
+
+    lastRun = elapsed;
+
+    final String currentPlayerName = await _getCurrentUsername();
+
+    await _runTimer.saveRun(); // saves run time to firebase
+
+    await _mapKey.currentState?.saveCompletedTerritoryRun
+      (
+      runTime: elapsed,
+      playerName: currentPlayerName,
+    );
+
     _runTimer.reset();
 
-    setState(() {
-      runState = RunState.idle;
-      elapsed = Duration.zero;
-    });
+    setState
+      (
+          ()
+      {
+        runState = RunState.idle;
+        elapsed = Duration.zero;
+        currentUsername = currentPlayerName;
+      },
+    );
 
-    _sheetController.animateTo( //animates the sheet when running
+    _sheetController.animateTo //animates the sheet when running
+      (
       0.35,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration
+        (
+        milliseconds: 300,
+      ),
       curve: Curves.easeOut,
     );
   }
 
   @override
-  void dispose() {
+  void dispose()
+  {
     _sheetController.dispose();
     _runTimer.pause();
+    _mapKey.currentState?.stopTracking();
     super.dispose();
   }
 
   @override
-  void initState() {
+  void initState()
+  {
     super.initState();
 
-    _sheetController.addListener(() {
-      setState(() {
-        _sheetSize = _sheetController.size;
-      });
-    });
+    _loadCurrentUsername();
+
+    _sheetController.addListener
+      (
+          ()
+      {
+        setState
+          (
+              ()
+          {
+            _sheetSize = _sheetController.size;
+          },
+        );
+      },
+    );
   }
 
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)
+  {
     final screenHeight = MediaQuery.of(context).size.height;
     final buttonBottom = screenHeight * _sheetSize + 10;
 
-    return Scaffold(
+    return Scaffold
+      (
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
+      appBar: AppBar
+        (
         backgroundColor: Colors.transparent,
         // foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('Homepage Page'),
-        actions: [  // ---> friends button
-          IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/my_friends_page'),
-            icon: Icon(Icons.people_alt_outlined),
+        title: const Text
+          (
+          'Homepage Page',
+        ),
+        actions:
+        [
+          // ---> scoreboard button
+          IconButton
+            (
+            onPressed: () => Navigator.pushNamed
+              (
+              context,
+              '/scoreboard_page',
+            ),
+            icon: const Icon
+              (
+              Icons.leaderboard_outlined,
+            ),
+            iconSize: 28,
+          ),
+
+          // ---> friends button
+          IconButton
+            (
+            onPressed: () => Navigator.pushNamed
+              (
+              context,
+              '/my_friends_page',
+            ),
+            icon: const Icon
+              (
+              Icons.people_alt_outlined,
+            ),
             iconSize: 28,
           ),
         ],
       ),
 
-      body: Stack(
-        children: [
+      body: Stack
+        (
+        children:
+        [
           // GOOGLE MAP
-          GMap(key: _mapKey,),
+          GMap
+            (
+            key: _mapKey,
+          ),
 
           // RESET CAMERA POSITION BUTTON
-          Positioned(
+          Positioned
+            (
             right: 16,
-            bottom:
-              buttonBottom > screenHeight/2 //if button > halfScreen
-              ? 10 : buttonBottom,          //then 10 else stick to sheet
-            child: ResetLocationButton(
-              onPressed: () {
+            bottom: buttonBottom > screenHeight / 2 //if button > halfScreen
+                ? 10
+                : buttonBottom,              //then 10 else stick to sheet
+            child: ResetLocationButton
+              (
+              onPressed: ()
+              {
                 _mapKey.currentState?.resetCamera();
               }, // ---> reset camera position
             ),
           ),
 
           //DRAGGABLE SCROLLABLE SHEET
-          MyScrollableDraggableSheet(  // ---> This is the Bottom draggable sheet
+          MyScrollableDraggableSheet
+            (
+            // ---> This is the Bottom draggable sheet
             controller: _sheetController,
             runState: runState,
             onStartRun: _startRun,
             onStopRun: _stopRun,
             onPauseRun: _pauseRun,
+            elapsed: elapsed,
+            lastRun: lastRun,
+            playerName: currentUsername,
           ),
 
           //START-RUN BUTTON
-          Positioned(
-            bottom: 0, right: 0, left: 0,//bounds
-            child: StartRunButton(
-              onTap: _startRun,// ---> starts the run will link later
+          Positioned
+            (
+            bottom: 0,
+            right: 0,
+            left: 0, //bounds
+            child: StartRunButton
+              (
+              onTap: _startRun, // ---> starts the run will link later
               runState: runState,
               elapsed: elapsed,
             ),
