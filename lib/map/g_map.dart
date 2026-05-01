@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -35,17 +37,25 @@ class GMapState extends State<GMap>
 
   GoogleMapController? _googleMapController;
   StreamSubscription<Position>? _positionStream;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _territoryRecordsStream;
 
   String? _selectedTerritoryId;
   String? _selectedTerritoryName;
 
   bool _isTracking = false;
   bool _routesAreLoading = false;
+  bool _territoryRecordsLoaded = false;
 
   final List<LatLng> _playerRunPath = [];
 
   final Map<String, List<LatLng>> _realTerritoryRoutes = {};
 
+  // Stores territory records loaded from Firebase.
+  final Map<String, TerritoryRecord> _territoryRecords = {};
+
+  // These are only route definitions.
+  // Owner and fastest time are NOT stored here.
+  // Owner and fastest time are loaded from Firebase Firestore.
   final List<Territory> _territories = const
   [
     Territory
@@ -80,8 +90,6 @@ class GMapState extends State<GMap>
         LatLng(-36.953200, 174.540800),
         LatLng(-36.947900, 174.542600),
       ],
-      currentOwner: 'No owner yet',
-      fastestTime: Duration.zero,
     ),
 
     Territory
@@ -116,12 +124,6 @@ class GMapState extends State<GMap>
         LatLng(-36.905100, 174.783500),
         LatLng(-36.901000, 174.783900),
       ],
-      currentOwner: 'Mika',
-      fastestTime: Duration
-        (
-        minutes: 12,
-        seconds: 34,
-      ),
     ),
 
     Territory
@@ -156,12 +158,6 @@ class GMapState extends State<GMap>
         LatLng(-36.863600, 174.776300),
         LatLng(-36.860900, 174.776000),
       ],
-      currentOwner: 'Sarah',
-      fastestTime: Duration
-        (
-        minutes: 9,
-        seconds: 58,
-      ),
     ),
 
     Territory
@@ -196,14 +192,21 @@ class GMapState extends State<GMap>
         LatLng(-36.611000, 174.825700),
         LatLng(-36.606700, 174.824600),
       ],
-      currentOwner: 'No owner yet',
-      fastestTime: Duration.zero,
     ),
   ];
 
   @override
+  void initState()
+  {
+    super.initState();
+
+    _listenToTerritoryRecords();
+  }
+
+  @override
   void dispose()
   {
+    _territoryRecordsStream?.cancel();
     _positionStream?.cancel();
     _googleMapController?.dispose();
     super.dispose();
@@ -261,8 +264,78 @@ class GMapState extends State<GMap>
     );
   }
 
-  String _formatDuration(Duration time)
+  void _listenToTerritoryRecords()
   {
+    _territoryRecordsStream = FirebaseFirestore.instance
+        .collection
+      (
+      'territories',
+    )
+        .snapshots()
+        .listen
+      (
+          (snapshot)
+      {
+        final Map<String, TerritoryRecord> loadedRecords = {};
+
+        for (final doc in snapshot.docs)
+        {
+          final data = doc.data();
+
+          loadedRecords[doc.id] = TerritoryRecord.fromFirestore
+            (
+            data,
+          );
+        }
+
+        if (!mounted)
+        {
+          return;
+        }
+
+        setState
+          (
+              ()
+          {
+            _territoryRecordsLoaded = true;
+            _territoryRecords.clear();
+            _territoryRecords.addAll
+              (
+              loadedRecords,
+            );
+          },
+        );
+      },
+      onError: (error)
+      {
+        debugPrint
+          (
+          'Could not load territory records: $error',
+        );
+
+        if (!mounted)
+        {
+          return;
+        }
+
+        setState
+          (
+              ()
+          {
+            _territoryRecordsLoaded = true;
+          },
+        );
+      },
+    );
+  }
+
+  String _formatDuration(Duration? time)
+  {
+    if (time == null)
+    {
+      return 'No record yet';
+    }
+
     if (time == Duration.zero)
     {
       return 'No record yet';
@@ -272,6 +345,59 @@ class GMapState extends State<GMap>
     final int seconds = time.inSeconds % 60;
 
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  TerritoryRecord? _getTerritoryRecord(Territory territory)
+  {
+    return _territoryRecords[territory.id];
+  }
+
+  String _getCurrentOwnerText(Territory territory)
+  {
+    if (!_territoryRecordsLoaded)
+    {
+      return 'Loading...';
+    }
+
+    final TerritoryRecord? record = _getTerritoryRecord
+      (
+      territory,
+    );
+
+    if (record == null)
+    {
+      return 'No owner yet';
+    }
+
+    if (record.currentOwner.trim().isEmpty)
+    {
+      return 'No owner yet';
+    }
+
+    return record.currentOwner;
+  }
+
+  String _getFastestTimeText(Territory territory)
+  {
+    if (!_territoryRecordsLoaded)
+    {
+      return 'Loading...';
+    }
+
+    final TerritoryRecord? record = _getTerritoryRecord
+      (
+      territory,
+    );
+
+    if (record == null)
+    {
+      return 'No record yet';
+    }
+
+    return _formatDuration
+      (
+      record.fastestTime,
+    );
   }
 
   Territory? _getSelectedTerritory()
@@ -297,7 +423,7 @@ class GMapState extends State<GMap>
     return _realTerritoryRoutes[territory.id] ?? territory.points;
   }
 
-  void _selectTerritory(Territory territory)
+  void _selectTerritoryOnly(Territory territory)
   {
     setState
       (
@@ -307,9 +433,16 @@ class GMapState extends State<GMap>
         _selectedTerritoryName = territory.name;
       },
     );
+  }
 
-    // When a user taps a territory path, the map zooms into that route.
-    _zoomToSelectedTerritory
+  void _selectTerritory(Territory territory)
+  {
+    _selectTerritoryOnly
+      (
+      territory,
+    );
+
+    _zoomToRouteOverview
       (
       territory,
     );
@@ -385,7 +518,7 @@ class GMapState extends State<GMap>
                     (
                     child: Text
                       (
-                      'Current Owner: ${territory.currentOwner}',
+                      'Current Owner: ${_getCurrentOwnerText(territory)}',
                       style: const TextStyle
                         (
                         fontSize: 16,
@@ -420,7 +553,7 @@ class GMapState extends State<GMap>
                     (
                     child: Text
                       (
-                      'Fastest Time: ${_formatDuration(territory.fastestTime)}',
+                      'Fastest Time: ${_getFastestTimeText(territory)}',
                       style: const TextStyle
                         (
                         fontSize: 16,
@@ -464,7 +597,7 @@ class GMapState extends State<GMap>
                       context,
                     );
 
-                    _selectTerritory
+                    _selectTerritoryOnly
                       (
                       territory,
                     );
@@ -607,7 +740,7 @@ class GMapState extends State<GMap>
       return false;
     }
 
-    await _zoomToSelectedTerritory
+    await _zoomToStartingPoint
       (
       selectedTerritory,
     );
@@ -815,7 +948,7 @@ class GMapState extends State<GMap>
     return true;
   }
 
-  Future<void> _zoomToSelectedTerritory(Territory territory) async
+  Future<void> _zoomToRouteOverview(Territory territory) async
   {
     final List<LatLng> routePoints = _getRoutePoints
       (
@@ -869,18 +1002,13 @@ class GMapState extends State<GMap>
       CameraUpdate.newLatLngBounds
         (
         bounds,
-        70,
+        80,
       ),
     );
+  }
 
-    await Future.delayed
-      (
-      const Duration
-        (
-        milliseconds: 600,
-      ),
-    );
-
+  Future<void> _zoomToStartingPoint(Territory territory) async
+  {
     await _googleMapController?.animateCamera
       (
       CameraUpdate.newCameraPosition
@@ -888,7 +1016,7 @@ class GMapState extends State<GMap>
         CameraPosition
           (
           target: territory.startPoint,
-          zoom: 9.4,
+          zoom: 17.5,
         ),
       ),
     );
@@ -1021,8 +1149,6 @@ class GMapState extends State<GMap>
             (
             territory,
           ),
-
-          // This lets the user tap the path to select the territory.
           consumeTapEvents: true,
           onTap: ()
           {
@@ -1031,9 +1157,6 @@ class GMapState extends State<GMap>
               territory,
             );
           },
-
-          // Normal paths are blue.
-          // The selected path becomes orange and thicker.
           width: isSelected ? 9 : 6,
           color: isSelected ? Colors.orange : Colors.blue,
           geodesic: false,
@@ -1146,6 +1269,105 @@ class GMapState extends State<GMap>
     return markers;
   }
 
+  Future<void> saveCompletedTerritoryRun
+      (
+      {
+        required Duration runTime,
+        required String playerName,
+      }
+      ) async
+  {
+    final Territory? selectedTerritory = _getSelectedTerritory();
+
+    if (selectedTerritory == null)
+    {
+      _showTopMessage
+        (
+        'No territory selected.',
+      );
+
+      return;
+    }
+
+    if (runTime == Duration.zero)
+    {
+      _showTopMessage
+        (
+        'Run time was too short to save.',
+      );
+
+      return;
+    }
+
+    final DocumentReference<Map<String, dynamic>> territoryRef =
+    FirebaseFirestore.instance
+        .collection
+      (
+      'territories',
+    )
+        .doc
+      (
+      selectedTerritory.id,
+    );
+
+    final DocumentSnapshot<Map<String, dynamic>> territorySnapshot =
+    await territoryRef.get();
+
+    final Map<String, dynamic>? territoryData = territorySnapshot.data();
+
+    final int newRunSeconds = runTime.inSeconds;
+
+    int currentFastestSeconds = 0;
+
+    if (territoryData != null && territoryData['fastestTimeSeconds'] != null)
+    {
+      final dynamic fastestValue = territoryData['fastestTimeSeconds'];
+
+      if (fastestValue is int)
+      {
+        currentFastestSeconds = fastestValue;
+      }
+      else if (fastestValue is double)
+      {
+        currentFastestSeconds = fastestValue.round();
+      }
+    }
+
+    final bool hasNoRecord = currentFastestSeconds <= 0;
+
+    final bool isNewFastest =
+        hasNoRecord || newRunSeconds < currentFastestSeconds;
+
+    if (isNewFastest)
+    {
+      await territoryRef.set
+        (
+        {
+          'territoryName': selectedTerritory.name,
+          'currentOwner': playerName,
+          'fastestTimeSeconds': newRunSeconds,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions
+          (
+          merge: true,
+        ),
+      );
+
+      _showTopMessage
+        (
+        'New King/Queen of ${selectedTerritory.name}!',
+      );
+    }
+    else
+    {
+      _showTopMessage
+        (
+        'Run saved, but record was not beaten.',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context)
   {
@@ -1226,6 +1448,52 @@ class GMapState extends State<GMap>
   }
 }
 
+class TerritoryRecord
+{
+  final String currentOwner;
+  final Duration? fastestTime;
+
+  const TerritoryRecord
+      ({
+    required this.currentOwner,
+    required this.fastestTime,
+  });
+
+  factory TerritoryRecord.fromFirestore(Map<String, dynamic> data)
+  {
+    final String owner = data['currentOwner'] ?? '';
+
+    final dynamic fastestTimeValue = data['fastestTimeSeconds'];
+
+    Duration? fastestTime;
+
+    if (fastestTimeValue is int && fastestTimeValue > 0)
+    {
+      fastestTime = Duration
+        (
+        seconds: fastestTimeValue,
+      );
+    }
+    else if (fastestTimeValue is double && fastestTimeValue > 0)
+    {
+      fastestTime = Duration
+        (
+        seconds: fastestTimeValue.round(),
+      );
+    }
+    else
+    {
+      fastestTime = null;
+    }
+
+    return TerritoryRecord
+      (
+      currentOwner: owner,
+      fastestTime: fastestTime,
+    );
+  }
+}
+
 class Territory
 {
   final String id;
@@ -1235,9 +1503,6 @@ class Territory
   final LatLng endPoint;
   final List<LatLng> waypoints;
 
-  final String currentOwner;
-  final Duration fastestTime;
-
   const Territory
       ({
     required this.id,
@@ -1246,7 +1511,5 @@ class Territory
     required this.startPoint,
     required this.endPoint,
     required this.waypoints,
-    required this.currentOwner,
-    required this.fastestTime,
   });
 }

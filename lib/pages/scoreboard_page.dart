@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /*
-This is where we can build the UI for the LeaderBoard
+This is where we can build the UI for the territory leaderboard
 */
 
 class ScoreboardPage extends StatelessWidget
@@ -11,6 +11,22 @@ class ScoreboardPage extends StatelessWidget
       ({
     super.key,
   });
+
+  String formatSeconds(int seconds)
+  {
+    if (seconds <= 0)
+    {
+      return '--:--';
+    }
+
+    final mins = (seconds ~/ 60).toString().padLeft
+      (2,'0',);
+
+    final secs = (seconds % 60).toString().padLeft
+      (2,'0',);
+
+    return "$mins:$secs";
+  }
 
   @override
   Widget build(BuildContext context)
@@ -37,13 +53,13 @@ class ScoreboardPage extends StatelessWidget
             height: 20,
           ),
 
-          // leaderboard title
           const Text
             (
-            " 🏆 LEADERBOARD ",
+            " 🏆 TERRITORY LEADERBOARD ",
+            textAlign: TextAlign.center,
             style: TextStyle
               (
-              fontSize: 35,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -53,21 +69,46 @@ class ScoreboardPage extends StatelessWidget
             height: 20,
           ),
 
-          // shows leaderboard using users best run times from firebase
-          // can change to territory leaderboard later
           Expanded
             (
-            // gets top users ordered by best run
             child: StreamBuilder<QuerySnapshot>
               (
               stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .where('bestRun', isGreaterThan: 0)
-                  .orderBy('bestRun')
-                  .limit(10)
+                  .collection
+                (
+                'territories',
+              )
+                  .where
+                (
+                'fastestTimeSeconds',
+                isGreaterThan: 0,
+              )
+                  .orderBy
+                (
+                'fastestTimeSeconds',
+              )
                   .snapshots(),
               builder: (context, snapshot)
               {
+                if (snapshot.hasError)
+                {
+                  return Center
+                    (
+                    child: Padding
+                      (
+                      padding: const EdgeInsets.all
+                        (
+                        16,
+                      ),
+                      child: Text
+                        (
+                        'Error loading leaderboard: ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
                 if (!snapshot.hasData)
                 {
                   return const Center
@@ -76,26 +117,45 @@ class ScoreboardPage extends StatelessWidget
                   );
                 }
 
-                final users = snapshot.data!.docs;
+                final territories = snapshot.data!.docs;
 
-                if (users.isEmpty)
+                if (territories.isEmpty)
                 {
                   return const Center
                     (
                     child: Text
                       (
-                      "No leaderboard data yet",
+                      "No territory records yet",
                     ),
                   );
                 }
 
                 return ListView.builder
                   (
-                  itemCount: users.length,
+                  itemCount: territories.length,
                   itemBuilder: (context, index)
                   {
-                    final user = users[index];
-                    final data = user.data() as Map<String, dynamic>;
+                    final territory = territories[index];
+                    final data = territory.data() as Map<String, dynamic>;
+
+                    final String territoryName =
+                        data['territoryName'] ?? 'Unknown Territory';
+
+                    final String currentOwner =
+                        data['currentOwner'] ?? 'No owner yet';
+
+                    final dynamic fastestValue = data['fastestTimeSeconds'];
+
+                    int fastestTimeSeconds = 0;
+
+                    if (fastestValue is int)
+                    {
+                      fastestTimeSeconds = fastestValue;
+                    }
+                    else if (fastestValue is double)
+                    {
+                      fastestTimeSeconds = fastestValue.round();
+                    }
 
                     return Card
                       (
@@ -106,7 +166,6 @@ class ScoreboardPage extends StatelessWidget
                       ),
                       child: ListTile
                         (
-                        //shows users rank and best run
                         leading: CircleAvatar
                           (
                           child: Text
@@ -114,18 +173,38 @@ class ScoreboardPage extends StatelessWidget
                             "#${index + 1}",
                           ),
                         ),
+
                         title: Text
                           (
-                          data['username'] ?? 'Unknown',
+                          territoryName,
                           style: const TextStyle
                             (
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        subtitle: Text
+
+                        subtitle: Column
                           (
-                          "Best Run: ${data['bestRun']} sec",
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children:
+                          [
+                            Text
+                              (
+                              "Owner: $currentOwner",
+                            ),
+
+                            const SizedBox
+                              (
+                              height: 4,
+                            ),
+
+                            Text
+                              (
+                              "Fastest Time: ${formatSeconds(fastestTimeSeconds)}",
+                            ),
+                          ],
                         ),
+
                         trailing: index == 0
                             ? const Icon
                           (
