@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage>
   double _sheetSize = 0.35;
   RunState runState = RunState.idle;
   Duration elapsed = Duration.zero;
+  Duration lastRun = Duration.zero;
 
   Future<void> _startRun() async
   {
@@ -133,9 +134,15 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  void _stopRun()
+  // when run stops, we can save everything here (timer + later map data)
+  Future<void> _stopRun() async
   {
     _mapKey.currentState?.stopTracking();
+
+    lastRun = elapsed;
+
+    await _runTimer.saveRun(); // saves run time to firebase
+
     _runTimer.reset();
 
     setState
@@ -206,6 +213,21 @@ class _HomePageState extends State<HomePage>
         ),
         actions:
         [
+          // ---> scoreboard button
+          IconButton
+            (
+            onPressed: () => Navigator.pushNamed
+              (
+              context,
+              '/scoreboard_page',
+            ),
+            icon: const Icon
+              (
+              Icons.leaderboard_outlined,
+            ),
+            iconSize: 28,
+          ),
+
           // ---> friends button
           IconButton
             (
@@ -258,6 +280,8 @@ class _HomePageState extends State<HomePage>
             onStartRun: _startRun,
             onStopRun: _stopRun,
             onPauseRun: _pauseRun,
+            elapsed: elapsed,
+            lastRun: lastRun,
           ),
 
           //START-RUN BUTTON
