@@ -1,5 +1,12 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import 'map_api_key.dart';
 
 /*
 THis is for the Google Map
@@ -9,8 +16,8 @@ class GMap extends StatefulWidget
 {
   const GMap
       ({
-        super.key,
-      });
+    super.key,
+  });
 
   @override
   State<GMap> createState() => GMapState();
@@ -29,197 +36,153 @@ class GMapState extends State<GMap>
   );
 
   GoogleMapController? _googleMapController;
+  StreamSubscription<Position>? _positionStream;
 
   String? _selectedTerritoryId;
   String? _selectedTerritoryName;
 
-  // These are the territories the players can choose from.
-  // The points are connected together to show the route the user should run.
-  // These routes are spread across Auckland to avoid overlapping.
+  bool _isTracking = false;
+  bool _routesAreLoading = false;
+
+  final List<LatLng> _playerRunPath = [];
+
+  final Map<String, List<LatLng>> _realTerritoryRoutes = {};
 
   final List<Territory> _territories = const
   [
     Territory
       (
-      id: 'ponsonby_loop',
-      name: 'Ponsonby Loop',
+      id: 'waitakere_ranges_track',
+      name: 'Waitakere Ranges Track',
       startPoint: LatLng
         (
-        -36.850600,
-        174.742600,
+        -36.947900,
+        174.542600,
       ),
+      endPoint: LatLng
+        (
+        -36.947900,
+        174.542600,
+      ),
+      waypoints:
+      [
+        LatLng(-36.944800, 174.548000),
+        LatLng(-36.948600, 174.554000),
+        LatLng(-36.954000, 174.553200),
+        LatLng(-36.956800, 174.546800),
+        LatLng(-36.953200, 174.540800),
+      ],
       points:
       [
-        LatLng(-36.850600, 174.742600),
-        LatLng(-36.848900, 174.742900),
-        LatLng(-36.847500, 174.744200),
-        LatLng(-36.846700, 174.746200),
-        LatLng(-36.847400, 174.748300),
-        LatLng(-36.849500, 174.749100),
-        LatLng(-36.851500, 174.748100),
-        LatLng(-36.852100, 174.745700),
-        LatLng(-36.850600, 174.742600),
+        LatLng(-36.947900, 174.542600),
+        LatLng(-36.944800, 174.548000),
+        LatLng(-36.948600, 174.554000),
+        LatLng(-36.954000, 174.553200),
+        LatLng(-36.956800, 174.546800),
+        LatLng(-36.953200, 174.540800),
+        LatLng(-36.947900, 174.542600),
       ],
     ),
 
     Territory
       (
-      id: 'viaduct_harbour_loop',
-      name: 'Viaduct Harbour Loop',
+      id: 'cornwall_park_one_tree_hill_track',
+      name: 'Cornwall Park / One Tree Hill Track',
       startPoint: LatLng
         (
-        -36.843300,
-        174.756600,
-      ),
-      points:
-      [
-        LatLng(-36.843300, 174.756600),
-        LatLng(-36.841800, 174.757200),
-        LatLng(-36.841000, 174.759200),
-        LatLng(-36.841200, 174.761700),
-        LatLng(-36.842600, 174.763400),
-        LatLng(-36.844600, 174.763500),
-        LatLng(-36.845400, 174.761400),
-        LatLng(-36.844900, 174.758800),
-        LatLng(-36.843300, 174.756600),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'queen_street_cbd_loop',
-      name: 'Queen Street CBD Loop',
-      startPoint: LatLng
-        (
-        -36.849200,
-        174.764900,
-      ),
-      points:
-      [
-        LatLng(-36.849200, 174.764900),
-        LatLng(-36.848400, 174.766000),
-        LatLng(-36.848500, 174.767600),
-        LatLng(-36.849700, 174.768700),
-        LatLng(-36.851200, 174.768300),
-        LatLng(-36.852000, 174.766800),
-        LatLng(-36.851400, 174.765200),
-        LatLng(-36.849900, 174.764500),
-        LatLng(-36.849200, 174.764900),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'auckland_domain_loop',
-      name: 'Auckland Domain Loop',
-      startPoint: LatLng
-        (
-        -36.861300,
-        174.775000,
-      ),
-      points:
-      [
-        LatLng(-36.861300, 174.775000),
-        LatLng(-36.859300, 174.776300),
-        LatLng(-36.858500, 174.778900),
-        LatLng(-36.859400, 174.781400),
-        LatLng(-36.861700, 174.782600),
-        LatLng(-36.864000, 174.781500),
-        LatLng(-36.865000, 174.778800),
-        LatLng(-36.864000, 174.776200),
-        LatLng(-36.861300, 174.775000),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'mission_bay_loop',
-      name: 'Mission Bay Loop',
-      startPoint: LatLng
-        (
-        -36.848800,
-        174.831900,
-      ),
-      points:
-      [
-        LatLng(-36.848800, 174.831900),
-        LatLng(-36.847900, 174.834000),
-        LatLng(-36.848400, 174.836300),
-        LatLng(-36.850100, 174.837700),
-        LatLng(-36.852100, 174.837100),
-        LatLng(-36.853000, 174.834700),
-        LatLng(-36.852300, 174.832400),
-        LatLng(-36.850500, 174.831300),
-        LatLng(-36.848800, 174.831900),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'mount_eden_loop',
-      name: 'Mount Eden Loop',
-      startPoint: LatLng
-        (
-        -36.876200,
-        174.764600,
-      ),
-      points:
-      [
-        LatLng(-36.876200, 174.764600),
-        LatLng(-36.874700, 174.766200),
-        LatLng(-36.874600, 174.768700),
-        LatLng(-36.876000, 174.770500),
-        LatLng(-36.878300, 174.770700),
-        LatLng(-36.880000, 174.768800),
-        LatLng(-36.879900, 174.766000),
-        LatLng(-36.878200, 174.764300),
-        LatLng(-36.876200, 174.764600),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'western_springs_loop',
-      name: 'Western Springs Loop',
-      startPoint: LatLng
-        (
-        -36.868600,
-        174.728300,
-      ),
-      points:
-      [
-        LatLng(-36.868600, 174.728300),
-        LatLng(-36.866800, 174.730000),
-        LatLng(-36.866400, 174.732700),
-        LatLng(-36.867800, 174.735000),
-        LatLng(-36.870300, 174.735400),
-        LatLng(-36.872400, 174.733500),
-        LatLng(-36.872600, 174.730600),
-        LatLng(-36.870700, 174.728400),
-        LatLng(-36.868600, 174.728300),
-      ],
-    ),
-
-    Territory
-      (
-      id: 'one_tree_hill_loop',
-      name: 'One Tree Hill Loop',
-      startPoint: LatLng
-        (
-        -36.901300,
+        -36.901000,
         174.783900,
       ),
+      endPoint: LatLng
+        (
+        -36.901000,
+        174.783900,
+      ),
+      waypoints:
+      [
+        LatLng(-36.897800, 174.786800),
+        LatLng(-36.899600, 174.792000),
+        LatLng(-36.904300, 174.793300),
+        LatLng(-36.907400, 174.789200),
+        LatLng(-36.905100, 174.783500),
+      ],
       points:
       [
-        LatLng(-36.901300, 174.783900),
-        LatLng(-36.899300, 174.786000),
-        LatLng(-36.899200, 174.789300),
-        LatLng(-36.901300, 174.791500),
-        LatLng(-36.904500, 174.791200),
-        LatLng(-36.906400, 174.788500),
-        LatLng(-36.905700, 174.785200),
-        LatLng(-36.903300, 174.783500),
-        LatLng(-36.901300, 174.783900),
+        LatLng(-36.901000, 174.783900),
+        LatLng(-36.897800, 174.786800),
+        LatLng(-36.899600, 174.792000),
+        LatLng(-36.904300, 174.793300),
+        LatLng(-36.907400, 174.789200),
+        LatLng(-36.905100, 174.783500),
+        LatLng(-36.901000, 174.783900),
+      ],
+    ),
+
+    Territory
+      (
+      id: 'auckland_domain_track',
+      name: 'Auckland Domain Track',
+      startPoint: LatLng
+        (
+        -36.860900,
+        174.776000,
+      ),
+      endPoint: LatLng
+        (
+        -36.860900,
+        174.776000,
+      ),
+      waypoints:
+      [
+        LatLng(-36.858600, 174.777800),
+        LatLng(-36.859300, 174.781900),
+        LatLng(-36.862300, 174.783400),
+        LatLng(-36.865000, 174.780400),
+        LatLng(-36.863600, 174.776300),
+      ],
+      points:
+      [
+        LatLng(-36.860900, 174.776000),
+        LatLng(-36.858600, 174.777800),
+        LatLng(-36.859300, 174.781900),
+        LatLng(-36.862300, 174.783400),
+        LatLng(-36.865000, 174.780400),
+        LatLng(-36.863600, 174.776300),
+        LatLng(-36.860900, 174.776000),
+      ],
+    ),
+
+    Territory
+      (
+      id: 'shakespear_regional_park_track',
+      name: 'Shakespear Regional Park Track',
+      startPoint: LatLng
+        (
+        -36.606700,
+        174.824600,
+      ),
+      endPoint: LatLng
+        (
+        -36.606700,
+        174.824600,
+      ),
+      waypoints:
+      [
+        LatLng(-36.603600, 174.826900),
+        LatLng(-36.602800, 174.832300),
+        LatLng(-36.607300, 174.836200),
+        LatLng(-36.611900, 174.832400),
+        LatLng(-36.611000, 174.825700),
+      ],
+      points:
+      [
+        LatLng(-36.606700, 174.824600),
+        LatLng(-36.603600, 174.826900),
+        LatLng(-36.602800, 174.832300),
+        LatLng(-36.607300, 174.836200),
+        LatLng(-36.611900, 174.832400),
+        LatLng(-36.611000, 174.825700),
+        LatLng(-36.606700, 174.824600),
       ],
     ),
   ];
@@ -227,6 +190,7 @@ class GMapState extends State<GMap>
   @override
   void dispose()
   {
+    _positionStream?.cancel();
     _googleMapController?.dispose();
     super.dispose();
   }
@@ -301,6 +265,11 @@ class GMapState extends State<GMap>
     return null;
   }
 
+  List<LatLng> _getRoutePoints(Territory territory)
+  {
+    return _realTerritoryRoutes[territory.id] ?? territory.points;
+  }
+
   void _selectTerritory(Territory territory)
   {
     setState
@@ -317,6 +286,107 @@ class GMapState extends State<GMap>
       (
       territory,
     );
+  }
+
+  Future<void> _loadRealTerritoryRoutes() async
+  {
+    if (_routesAreLoading)
+    {
+      return;
+    }
+
+    _routesAreLoading = true;
+
+    for (final territory in _territories)
+    {
+      try
+      {
+        final List<LatLng> route = await _getRealWalkingRoute
+          (
+          territory,
+        );
+
+        if (!mounted)
+        {
+          return;
+        }
+
+        setState
+          (
+              ()
+          {
+            _realTerritoryRoutes[territory.id] = route;
+          },
+        );
+      }
+      catch (error)
+      {
+        debugPrint
+          (
+          'Could not load route for ${territory.name}: $error',
+        );
+      }
+    }
+
+    _routesAreLoading = false;
+  }
+
+  Future<List<LatLng>> _getRealWalkingRoute(Territory territory) async
+  {
+    final String waypointText = territory.waypoints.map
+      (
+          (point)
+      {
+        return '${point.latitude},${point.longitude}';
+      },
+    ).join('|');
+
+    final Uri uri = Uri.https
+      (
+      'maps.googleapis.com',
+      '/maps/api/directions/json',
+      {
+        'origin': '${territory.startPoint.latitude},${territory.startPoint.longitude}',
+        'destination': '${territory.endPoint.latitude},${territory.endPoint.longitude}',
+        'waypoints': waypointText,
+        'mode': 'walking',
+        'key': googleDirectionsApiKey,
+      },
+    );
+
+    final response = await Dio().getUri
+      (
+      uri,
+    );
+
+    final data = response.data;
+
+    if (data['status'] != 'OK')
+    {
+      throw Exception
+        (
+        'Directions API error: ${data['status']}',
+      );
+    }
+
+    final String encodedPolyline = data['routes'][0]['overview_polyline']['points'];
+
+    final List<PointLatLng> decodedPoints = PolylinePoints().decodePolyline
+      (
+      encodedPolyline,
+    );
+
+    return decodedPoints.map
+      (
+          (point)
+      {
+        return LatLng
+          (
+          point.latitude,
+          point.longitude,
+        );
+      },
+    ).toList();
   }
 
   Future<bool> prepareRunFromSelectedTerritory() async
@@ -363,6 +433,13 @@ class GMapState extends State<GMap>
       return false;
     }
 
+    final bool trackingStarted = await startTracking();
+
+    if (!trackingStarted)
+    {
+      return false;
+    }
+
     _showTopMessage
       (
       'Run started in ${selectedTerritory.name}.',
@@ -371,14 +448,182 @@ class GMapState extends State<GMap>
     return true;
   }
 
+  Future<bool> startTracking() async
+  {
+    final bool hasPermission = await _checkLocationPermission();
+
+    if (!hasPermission)
+    {
+      return false;
+    }
+
+    await _positionStream?.cancel();
+
+    setState
+      (
+          ()
+      {
+        _isTracking = true;
+        _playerRunPath.clear();
+      },
+    );
+
+    const LocationSettings locationSettings = LocationSettings
+      (
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 3,
+    );
+
+    _positionStream = Geolocator.getPositionStream
+      (
+      locationSettings: locationSettings,
+    ).listen
+      (
+          (Position position)
+      {
+        final LatLng newPosition = LatLng
+          (
+          position.latitude,
+          position.longitude,
+        );
+
+        setState
+          (
+              ()
+          {
+            _playerRunPath.add
+              (
+              newPosition,
+            );
+          },
+        );
+
+        _googleMapController?.animateCamera
+          (
+          CameraUpdate.newLatLng
+            (
+            newPosition,
+          ),
+        );
+      },
+    );
+
+    return true;
+  }
+
+  void pauseTracking()
+  {
+    _positionStream?.pause();
+
+    setState
+      (
+          ()
+      {
+        _isTracking = false;
+      },
+    );
+  }
+
+  void resumeTracking()
+  {
+    _positionStream?.resume();
+
+    setState
+      (
+          ()
+      {
+        _isTracking = true;
+      },
+    );
+  }
+
+  void stopTracking()
+  {
+    _positionStream?.cancel();
+    _positionStream = null;
+
+    setState
+      (
+          ()
+      {
+        _isTracking = false;
+        _playerRunPath.clear();
+      },
+    );
+  }
+
+  Future<bool> _checkLocationPermission() async
+  {
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled)
+    {
+      if (!mounted)
+      {
+        return false;
+      }
+
+      _showTopMessage
+        (
+        'Please turn on location services.',
+      );
+
+      return false;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied)
+    {
+      permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied)
+      {
+        if (!mounted)
+        {
+          return false;
+        }
+
+        _showTopMessage
+          (
+          'Location permission was denied.',
+        );
+
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever)
+    {
+      if (!mounted)
+      {
+        return false;
+      }
+
+      _showTopMessage
+        (
+        'Location permission is permanently denied.',
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> _zoomToSelectedTerritory(Territory territory) async
   {
-    double minLat = territory.points.first.latitude;
-    double maxLat = territory.points.first.latitude;
-    double minLng = territory.points.first.longitude;
-    double maxLng = territory.points.first.longitude;
+    final List<LatLng> routePoints = _getRoutePoints
+      (
+      territory,
+    );
 
-    for (final point in territory.points)
+    double minLat = routePoints.first.latitude;
+    double maxLat = routePoints.first.latitude;
+    double minLng = routePoints.first.longitude;
+    double maxLng = routePoints.first.longitude;
+
+    for (final point in routePoints)
     {
       if (point.latitude < minLat)
       {
@@ -439,7 +684,7 @@ class GMapState extends State<GMap>
         CameraPosition
           (
           target: territory.startPoint,
-          zoom: 17.0,
+          zoom: 9.4,
         ),
       ),
     );
@@ -556,7 +801,7 @@ class GMapState extends State<GMap>
 
   Set<Polyline> _getTerritoryPaths()
   {
-    return _territories.map
+    final Set<Polyline> paths = _territories.map
       (
           (territory)
       {
@@ -568,7 +813,10 @@ class GMapState extends State<GMap>
             (
             territory.id,
           ),
-          points: territory.points,
+          points: _getRoutePoints
+            (
+            territory,
+          ),
 
           // This lets the user tap the path to select the territory.
           consumeTapEvents: true,
@@ -588,6 +836,26 @@ class GMapState extends State<GMap>
         );
       },
     ).toSet();
+
+    if (_playerRunPath.isNotEmpty)
+    {
+      paths.add
+        (
+        Polyline
+          (
+          polylineId: const PolylineId
+            (
+            'player_live_run_path',
+          ),
+          points: _playerRunPath,
+          width: 8,
+          color: Colors.green,
+          geodesic: false,
+        ),
+      );
+    }
+
+    return paths;
   }
 
   Set<Marker> _getTerritoryMarkers()
@@ -634,7 +902,7 @@ class GMapState extends State<GMap>
             (
             '${territory.id}_finish_marker',
           ),
-          position: territory.points.last,
+          position: territory.endPoint,
           infoWindow: InfoWindow
             (
             title: '${territory.name} Finish',
@@ -643,6 +911,29 @@ class GMapState extends State<GMap>
           icon: BitmapDescriptor.defaultMarkerWithHue
             (
             BitmapDescriptor.hueRed,
+          ),
+        ),
+      );
+    }
+
+    if (_playerRunPath.isNotEmpty)
+    {
+      markers.add
+        (
+        Marker
+          (
+          markerId: const MarkerId
+            (
+            'player_current_position',
+          ),
+          position: _playerRunPath.last,
+          infoWindow: const InfoWindow
+            (
+            title: 'Your current position',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue
+            (
+            BitmapDescriptor.hueAzure,
           ),
         ),
       );
@@ -661,7 +952,8 @@ class GMapState extends State<GMap>
         GoogleMap
           (
           initialCameraPosition: _initialCameraPosition,
-          myLocationButtonEnabled: false,
+          myLocationButtonEnabled: true,
+          myLocationEnabled: _isTracking,
           zoomControlsEnabled: true,
           minMaxZoomPreference: const MinMaxZoomPreference
             (
@@ -673,6 +965,7 @@ class GMapState extends State<GMap>
           onMapCreated: (controller)
           {
             _googleMapController = controller;
+            _loadRealTerritoryRoutes();
           },
         ),
 
@@ -712,6 +1005,8 @@ class GMapState extends State<GMap>
               (
               _selectedTerritoryName == null
                   ? 'Select a route to run'
+                  : _isTracking
+                  ? 'Tracking: $_selectedTerritoryName'
                   : 'Selected: $_selectedTerritoryName',
               textAlign: TextAlign.center,
               style: const TextStyle
@@ -733,12 +1028,16 @@ class Territory
   final String name;
   final List<LatLng> points;
   final LatLng startPoint;
+  final LatLng endPoint;
+  final List<LatLng> waypoints;
 
   const Territory
       ({
-        required this.id,
-        required this.name,
-        required this.points,
-        required this.startPoint,
-      });
+    required this.id,
+    required this.name,
+    required this.points,
+    required this.startPoint,
+    required this.endPoint,
+    required this.waypoints,
+  });
 }
