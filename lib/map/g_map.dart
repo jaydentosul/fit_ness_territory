@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -81,6 +80,8 @@ class GMapState extends State<GMap>
         LatLng(-36.953200, 174.540800),
         LatLng(-36.947900, 174.542600),
       ],
+      currentOwner: 'No owner yet',
+      fastestTime: Duration.zero,
     ),
 
     Territory
@@ -115,6 +116,12 @@ class GMapState extends State<GMap>
         LatLng(-36.905100, 174.783500),
         LatLng(-36.901000, 174.783900),
       ],
+      currentOwner: 'Mika',
+      fastestTime: Duration
+        (
+        minutes: 12,
+        seconds: 34,
+      ),
     ),
 
     Territory
@@ -149,6 +156,12 @@ class GMapState extends State<GMap>
         LatLng(-36.863600, 174.776300),
         LatLng(-36.860900, 174.776000),
       ],
+      currentOwner: 'Sarah',
+      fastestTime: Duration
+        (
+        minutes: 9,
+        seconds: 58,
+      ),
     ),
 
     Territory
@@ -183,6 +196,8 @@ class GMapState extends State<GMap>
         LatLng(-36.611000, 174.825700),
         LatLng(-36.606700, 174.824600),
       ],
+      currentOwner: 'No owner yet',
+      fastestTime: Duration.zero,
     ),
   ];
 
@@ -246,6 +261,19 @@ class GMapState extends State<GMap>
     );
   }
 
+  String _formatDuration(Duration time)
+  {
+    if (time == Duration.zero)
+    {
+      return 'No record yet';
+    }
+
+    final int minutes = time.inMinutes;
+    final int seconds = time.inSeconds % 60;
+
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
   Territory? _getSelectedTerritory()
   {
     if (_selectedTerritoryId == null)
@@ -284,6 +312,183 @@ class GMapState extends State<GMap>
     _zoomToSelectedTerritory
       (
       territory,
+    );
+  }
+
+  void _openTerritoryDetails(Territory territory)
+  {
+    _selectTerritory
+      (
+      territory,
+    );
+
+    showModalBottomSheet
+      (
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder
+        (
+        borderRadius: BorderRadius.vertical
+          (
+          top: Radius.circular
+            (
+            24,
+          ),
+        ),
+      ),
+      builder: (context)
+      {
+        return Padding
+          (
+          padding: const EdgeInsets.all
+            (
+            24,
+          ),
+          child: Column
+            (
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+            [
+              Text
+                (
+                territory.name,
+                style: const TextStyle
+                  (
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+
+              const SizedBox
+                (
+                height: 16,
+              ),
+
+              Row
+                (
+                children:
+                [
+                  const Icon
+                    (
+                    Icons.emoji_events,
+                    color: Colors.orange,
+                  ),
+
+                  const SizedBox
+                    (
+                    width: 8,
+                  ),
+
+                  Expanded
+                    (
+                    child: Text
+                      (
+                      'Current Owner: ${territory.currentOwner}',
+                      style: const TextStyle
+                        (
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox
+                (
+                height: 12,
+              ),
+
+              Row
+                (
+                children:
+                [
+                  const Icon
+                    (
+                    Icons.timer,
+                    color: Colors.blue,
+                  ),
+
+                  const SizedBox
+                    (
+                    width: 8,
+                  ),
+
+                  Expanded
+                    (
+                    child: Text
+                      (
+                      'Fastest Time: ${_formatDuration(territory.fastestTime)}',
+                      style: const TextStyle
+                        (
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox
+                (
+                height: 20,
+              ),
+
+              SizedBox
+                (
+                width: double.infinity,
+                child: ElevatedButton
+                  (
+                  style: ElevatedButton.styleFrom
+                    (
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric
+                      (
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder
+                      (
+                      borderRadius: BorderRadius.circular
+                        (
+                        18,
+                      ),
+                    ),
+                  ),
+                  onPressed: ()
+                  {
+                    Navigator.pop
+                      (
+                      context,
+                    );
+
+                    _selectTerritory
+                      (
+                      territory,
+                    );
+
+                    _showTopMessage
+                      (
+                      '${territory.name} selected.',
+                    );
+                  },
+                  child: const Text
+                    (
+                    'Select This Territory',
+                    style: TextStyle
+                      (
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -821,7 +1026,7 @@ class GMapState extends State<GMap>
           consumeTapEvents: true,
           onTap: ()
           {
-            _selectTerritory
+            _openTerritoryDetails
               (
               territory,
             );
@@ -885,7 +1090,7 @@ class GMapState extends State<GMap>
           ),
           onTap: ()
           {
-            _selectTerritory
+            _openTerritoryDetails
               (
               territory,
             );
@@ -1030,6 +1235,9 @@ class Territory
   final LatLng endPoint;
   final List<LatLng> waypoints;
 
+  final String currentOwner;
+  final Duration fastestTime;
+
   const Territory
       ({
     required this.id,
@@ -1038,5 +1246,7 @@ class Territory
     required this.startPoint,
     required this.endPoint,
     required this.waypoints,
+    required this.currentOwner,
+    required this.fastestTime,
   });
 }
