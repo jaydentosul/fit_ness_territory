@@ -711,7 +711,7 @@ class GMapState extends State<GMap>
 
     final String encodedPolyline = data['routes'][0]['overview_polyline']['points'];
 
-    final List<PointLatLng> decodedPoints = PolylinePoints().decodePolyline
+    final List<PointLatLng> decodedPoints = PolylinePoints.decodePolyline
       (
       encodedPolyline,
     );
