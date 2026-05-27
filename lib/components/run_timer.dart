@@ -8,6 +8,9 @@ class RunTimer {
   // getter for current elapsed time
   Duration get elapsed => _elapsedTime;
 
+  //simple calories estimation (approx 8cal/min jogging)
+  double get calories => _elapsedTime.inSeconds / 60 * 8;
+
   // start the timer
   void start(void Function(Duration) onTick) {
     _timer?.cancel();
