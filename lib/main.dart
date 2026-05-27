@@ -39,6 +39,9 @@ class MyApp extends StatelessWidget {
         '/my_friends_page': (context) => const MyFriendsPage(),
       },
 
+      //orwingouwrghw[oruwghorughw[ergw\
+      //weoifnwoerufhw
+
     );
   }
 }
