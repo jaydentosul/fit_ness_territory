@@ -45,8 +45,7 @@ class IntroPage extends StatelessWidget {
 
             //Button
             ButtonOne(
-              // onTap: () => Navigator.pushReplacementNamed(context, '/login_page'),
-              onTap: () => Navigator.pushReplacementNamed(context, '/home_page'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/login_page'),
               buttonIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
