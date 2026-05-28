@@ -217,7 +217,7 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 50),
+              const SizedBox(height: 30),
 
               Padding(
                 padding: hPadding,

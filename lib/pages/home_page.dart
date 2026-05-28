@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage> {
         runState = RunState.running;
         elapsed = Duration.zero;
         currentDistanceMetres = 0.0;
+        _calories = 0.0;
       });
 
       //animates the sheet when running
@@ -64,7 +65,6 @@ class _HomePageState extends State<HomePage> {
       _runTimer.start((time) {
         setState(() {
           elapsed = time;
-          _calories = _runTimer.calories; //calculates kCal
           });
         },
       );
@@ -98,7 +98,6 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
           runState = RunState.running;
-          _calories = _runTimer.calories; //continues calculation when resume
         },
       );
 
@@ -126,7 +125,7 @@ class _HomePageState extends State<HomePage> {
     lastRun = elapsed;
 
     final String currentPlayerName = currentUsername;
-    final double finalCalories = _runTimer.calories;
+    final double finalCalories = _calories;
 
     await _runTimer.saveRun();
 
@@ -242,12 +241,10 @@ class _HomePageState extends State<HomePage> {
           GMap(
             key: _mapKey,
             onDistanceChanged: (distance) {
-              if (!mounted) {
-                return;
-              }
-
+              if (!mounted) return;
               setState(() {
                 currentDistanceMetres = distance;
+                _calories = (distance / 1000) * 60; //calculates calories based on distance
               });
             },
           ),

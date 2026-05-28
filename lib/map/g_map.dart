@@ -16,10 +16,7 @@ This is for the Google Map
 class GMap extends StatefulWidget {
   final void Function(double distanceMetres)? onDistanceChanged;
 
-  const GMap({
-    super.key,
-    this.onDistanceChanged,
-  });
+  const GMap({super.key, this.onDistanceChanged});
 
   @override
   State<GMap> createState() => GMapState();
@@ -27,10 +24,7 @@ class GMap extends StatefulWidget {
 
 class GMapState extends State<GMap> {
   static const _initialCameraPosition = CameraPosition(
-    target: LatLng(
-      -36.850202 - 0.001,
-      174.767688,
-    ),
+    target: LatLng(-36.850202 - 0.001, 174.767688),
     zoom: 11.8,
   );
 
@@ -65,14 +59,8 @@ class GMapState extends State<GMap> {
     Territory(
       id: 'waitakere_ranges_track',
       name: 'Waitakere Ranges Track',
-      startPoint: LatLng(
-        -36.947900,
-        174.542600,
-      ),
-      endPoint: LatLng(
-        -36.947900,
-        174.542600,
-      ),
+      startPoint: LatLng(-36.947900, 174.542600),
+      endPoint: LatLng(-36.947900, 174.542600),
       waypoints: [
         LatLng(-36.944800, 174.548000),
         LatLng(-36.948600, 174.554000),
@@ -93,14 +81,8 @@ class GMapState extends State<GMap> {
     Territory(
       id: 'cornwall_park_one_tree_hill_track',
       name: 'Cornwall Park / One Tree Hill Track',
-      startPoint: LatLng(
-        -36.901000,
-        174.783900,
-      ),
-      endPoint: LatLng(
-        -36.901000,
-        174.783900,
-      ),
+      startPoint: LatLng(-36.901000, 174.783900),
+      endPoint: LatLng(-36.901000, 174.783900),
       waypoints: [
         LatLng(-36.897800, 174.786800),
         LatLng(-36.899600, 174.792000),
@@ -121,14 +103,8 @@ class GMapState extends State<GMap> {
     Territory(
       id: 'auckland_domain_track',
       name: 'Auckland Domain Track',
-      startPoint: LatLng(
-        -36.860900,
-        174.776000,
-      ),
-      endPoint: LatLng(
-        -36.860900,
-        174.776000,
-      ),
+      startPoint: LatLng(-36.860900, 174.776000),
+      endPoint: LatLng(-36.860900, 174.776000),
       waypoints: [
         LatLng(-36.858600, 174.777800),
         LatLng(-36.859300, 174.781900),
@@ -149,14 +125,8 @@ class GMapState extends State<GMap> {
     Territory(
       id: 'shakespear_regional_park_track',
       name: 'Shakespear Regional Park Track',
-      startPoint: LatLng(
-        -36.606700,
-        174.824600,
-      ),
-      endPoint: LatLng(
-        -36.606700,
-        174.824600,
-      ),
+      startPoint: LatLng(-36.606700, 174.824600),
+      endPoint: LatLng(-36.606700, 174.824600),
       waypoints: [
         LatLng(-36.603600, 174.826900),
         LatLng(-36.602800, 174.832300),
@@ -193,9 +163,7 @@ class GMapState extends State<GMap> {
 
   void resetCamera() {
     _googleMapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        _initialCameraPosition,
-      ),
+      CameraUpdate.newCameraPosition(_initialCameraPosition),
     );
   }
 
@@ -207,74 +175,58 @@ class GMapState extends State<GMap> {
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.black87,
-        duration: const Duration(
-          seconds: 2,
-        ),
+        duration: const Duration(seconds: 2),
         margin: const EdgeInsets.only(
           left: 16,
           right: 16,
           top: 80,
           bottom: 735,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            14,
-          ),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
 
   void _listenToTerritoryRecords() {
     _territoryRecordsStream = FirebaseFirestore.instance
-        .collection(
-      'territories',
-    )
+        .collection('territories')
         .snapshots()
         .listen(
           (snapshot) {
-        final Map<String, TerritoryRecord> loadedRecords = {};
+            final Map<String, TerritoryRecord> loadedRecords = {};
 
-        for (final doc in snapshot.docs) {
-          final data = doc.data();
+            for (final doc in snapshot.docs) {
+              final data = doc.data();
 
-          loadedRecords[doc.id] = TerritoryRecord.fromFirestore(
-            data,
-          );
-        }
+              loadedRecords[doc.id] = TerritoryRecord.fromFirestore(data);
+            }
 
-        if (!mounted) {
-          return;
-        }
+            if (!mounted) {
+              return;
+            }
 
-        setState(() {
-          _territoryRecordsLoaded = true;
-          _territoryRecords.clear();
-          _territoryRecords.addAll(
-            loadedRecords,
-          );
-        });
-      },
-      onError: (error) {
-        debugPrint(
-          'Could not load territory records: $error',
+            setState(() {
+              _territoryRecordsLoaded = true;
+              _territoryRecords.clear();
+              _territoryRecords.addAll(loadedRecords);
+            });
+          },
+          onError: (error) {
+            debugPrint('Could not load territory records: $error');
+
+            if (!mounted) {
+              return;
+            }
+
+            setState(() {
+              _territoryRecordsLoaded = true;
+            });
+          },
         );
-
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          _territoryRecordsLoaded = true;
-        });
-      },
-    );
   }
 
   String _formatDuration(Duration? time) {
@@ -301,9 +253,7 @@ class GMapState extends State<GMap> {
       return 'Loading...';
     }
 
-    final TerritoryRecord? record = _getTerritoryRecord(
-      territory,
-    );
+    final TerritoryRecord? record = _getTerritoryRecord(territory);
 
     if (record == null) {
       return 'No owner yet';
@@ -321,17 +271,13 @@ class GMapState extends State<GMap> {
       return 'Loading...';
     }
 
-    final TerritoryRecord? record = _getTerritoryRecord(
-      territory,
-    );
+    final TerritoryRecord? record = _getTerritoryRecord(territory);
 
     if (record == null) {
       return 'No record yet';
     }
 
-    return _formatDuration(
-      record.fastestTime,
-    );
+    return _formatDuration(record.fastestTime);
   }
 
   Territory? _getSelectedTerritory() {
@@ -360,35 +306,23 @@ class GMapState extends State<GMap> {
   }
 
   void _selectTerritory(Territory territory) {
-    _selectTerritoryOnly(
-      territory,
-    );
+    _selectTerritoryOnly(territory);
 
-    _zoomToRouteOverview(
-      territory,
-    );
+    _zoomToRouteOverview(territory);
   }
 
   void _openTerritoryDetails(Territory territory) {
-    _selectTerritory(
-      territory,
-    );
+    _selectTerritory(territory);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(
-            24,
-          ),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(
-            24,
-          ),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,89 +335,54 @@ class GMapState extends State<GMap> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  const Icon(
-                    Icons.emoji_events,
-                    color: Colors.orange,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
+                  const Icon(Icons.emoji_events, color: Colors.orange),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Current Owner: ${_getCurrentOwnerText(territory)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
+                      style: const TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(
-                    Icons.timer,
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
+                  const Icon(Icons.timer, color: Colors.blue),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Fastest Time: ${_getFastestTimeText(territory)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
+                      style: const TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        18,
-                      ),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pop(
-                      context,
-                    );
+                    Navigator.pop(context);
 
-                    _selectTerritoryOnly(
-                      territory,
-                    );
+                    _selectTerritoryOnly(territory);
 
-                    _showTopMessage(
-                      '${territory.name} selected.',
-                    );
+                    _showTopMessage('${territory.name} selected.');
                   },
                   child: const Text(
                     'Select This Territory',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -503,9 +402,7 @@ class GMapState extends State<GMap> {
 
     for (final territory in _territories) {
       try {
-        final List<LatLng> route = await _getRealWalkingRoute(
-          territory,
-        );
+        final List<LatLng> route = await _getRealWalkingRoute(territory);
 
         if (!mounted) {
           return;
@@ -515,9 +412,7 @@ class GMapState extends State<GMap> {
           _realTerritoryRoutes[territory.id] = route;
         });
       } catch (error) {
-        debugPrint(
-          'Could not load route for ${territory.name}: $error',
-        );
+        debugPrint('Could not load route for ${territory.name}: $error');
       }
     }
 
@@ -525,87 +420,66 @@ class GMapState extends State<GMap> {
   }
 
   Future<List<LatLng>> _getRealWalkingRoute(Territory territory) async {
-    final String waypointText = territory.waypoints.map(
-          (point) {
-        return '${point.latitude},${point.longitude}';
-      },
-    ).join('|');
+    final String waypointText = territory.waypoints
+        .map((point) {
+          return '${point.latitude},${point.longitude}';
+        })
+        .join('|');
 
-    final Uri uri = Uri.https(
-      'maps.googleapis.com',
-      '/maps/api/directions/json',
-      {
-        'origin':
-        '${territory.startPoint.latitude},${territory.startPoint.longitude}',
-        'destination':
-        '${territory.endPoint.latitude},${territory.endPoint.longitude}',
-        'waypoints': waypointText,
-        'mode': 'walking',
-        'key': googleDirectionsApiKey,
-      },
-    );
+    final Uri
+    uri = Uri.https('maps.googleapis.com', '/maps/api/directions/json', {
+      'origin':
+          '${territory.startPoint.latitude},${territory.startPoint.longitude}',
+      'destination':
+          '${territory.endPoint.latitude},${territory.endPoint.longitude}',
+      'waypoints': waypointText,
+      'mode': 'walking',
+      'key': googleDirectionsApiKey,
+    });
 
-    final response = await Dio().getUri(
-      uri,
-    );
+    final response = await Dio().getUri(uri);
 
     final data = response.data;
 
     if (data['status'] != 'OK') {
-      throw Exception(
-        'Directions API error: ${data['status']}',
-      );
+      throw Exception('Directions API error: ${data['status']}');
     }
 
     final String encodedPolyline =
-    data['routes'][0]['overview_polyline']['points'];
+        data['routes'][0]['overview_polyline']['points'];
 
-    final List<PointLatLng> decodedPoints = PolylinePoints.decodePolyline
-      (
+    final List<PointLatLng> decodedPoints = PolylinePoints.decodePolyline(
       encodedPolyline,
     );
 
-    return decodedPoints.map(
-          (point) {
-        return LatLng(
-          point.latitude,
-          point.longitude,
-        );
-      },
-    ).toList();
+    return decodedPoints.map((point) {
+      return LatLng(point.latitude, point.longitude);
+    }).toList();
   }
 
   Future<bool> prepareRunFromSelectedTerritory() async {
     final Territory? selectedTerritory = _getSelectedTerritory();
 
     if (selectedTerritory == null) {
-      _showTopMessage(
-        'Please select a route first.',
-      );
+      _showTopMessage('Please select a route first.');
 
       return false;
     }
 
-    await _zoomToStartingPoint(
-      selectedTerritory,
-    );
+    await _zoomToStartingPoint(selectedTerritory);
 
     if (!mounted) {
       return false;
     }
 
-    final bool isReady = await _showReadyDialog(
-      selectedTerritory,
-    );
+    final bool isReady = await _showReadyDialog(selectedTerritory);
 
     if (!mounted) {
       return false;
     }
 
     if (!isReady) {
-      _showTopMessage(
-        'Run cancelled.',
-      );
+      _showTopMessage('Run cancelled.');
 
       return false;
     }
@@ -616,17 +490,15 @@ class GMapState extends State<GMap> {
       return false;
     }
 
-    _showTopMessage(
-      'Run started in ${selectedTerritory.name}.',
-    );
+    _showTopMessage('Run started in ${selectedTerritory.name}.');
 
     return true;
   }
 
   double _distanceFromRouteInMetres(
-      LatLng userPosition,
-      List<LatLng> routePoints,
-      ) {
+    LatLng userPosition,
+    List<LatLng> routePoints,
+  ) {
     if (routePoints.isEmpty) {
       return double.infinity;
     }
@@ -649,54 +521,41 @@ class GMapState extends State<GMap> {
     return closestDistance;
   }
 
-  void _checkTerritoryBoundary(
-      LatLng userPosition,
-      ) {
+  void _checkTerritoryBoundary(LatLng userPosition) {
     final Territory? selectedTerritory = _getSelectedTerritory();
 
     if (selectedTerritory == null) {
       return;
     }
 
-    final List<LatLng> routePoints = _getRoutePoints(
-      selectedTerritory,
-    );
+    final List<LatLng> routePoints = _getRoutePoints(selectedTerritory);
 
     final double distanceFromRoute = _distanceFromRouteInMetres(
       userPosition,
       routePoints,
     );
 
-    final bool isNowOutside =
-        distanceFromRoute > _allowedRouteDistanceMetres;
+    final bool isNowOutside = distanceFromRoute > _allowedRouteDistanceMetres;
 
     if (isNowOutside && !_isOutsideTerritory) {
       setState(() {
         _isOutsideTerritory = true;
       });
 
-      _showTopMessage(
-        'Warning: You left the territory route.',
-      );
+      _showTopMessage('Warning: You left the territory route.');
     } else if (!isNowOutside && _isOutsideTerritory) {
       setState(() {
         _isOutsideTerritory = false;
       });
 
-      _showTopMessage(
-        'You are back inside the territory route.',
-      );
+      _showTopMessage('You are back inside the territory route.');
     }
   }
 
   void _updateRunDistance(LatLng newPosition) {
-    _runProgressTracker.updatePosition(
-      newPosition,
-    );
+    _runProgressTracker.updatePosition(newPosition);
 
-    widget.onDistanceChanged?.call(
-      _runProgressTracker.totalDistanceMetres,
-    );
+    widget.onDistanceChanged?.call(_runProgressTracker.totalDistanceMetres);
   }
 
   Future<bool> startTracking() async {
@@ -716,64 +575,49 @@ class GMapState extends State<GMap> {
 
     _runProgressTracker.startRun();
 
-    widget.onDistanceChanged?.call(
-      _runProgressTracker.totalDistanceMetres,
-    );
+    widget.onDistanceChanged?.call(_runProgressTracker.totalDistanceMetres);
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 3,
     );
 
-    _positionStream = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen(
+    _positionStream =
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
           (Position position) {
-        final LatLng newPosition = LatLng(
-          position.latitude,
-          position.longitude,
+            final LatLng newPosition = LatLng(
+              position.latitude,
+              position.longitude,
+            );
+
+            setState(() {
+              _playerRunPath.add(newPosition);
+            });
+
+            _updateRunDistance(newPosition);
+
+            _checkTerritoryBoundary(newPosition);
+
+            _googleMapController?.animateCamera(
+              CameraUpdate.newLatLng(newPosition),
+            );
+          },
+          onError: (error) {
+            debugPrint('Location tracking error: $error');
+
+            if (!mounted) {
+              return;
+            }
+
+            _showTopMessage('Location tracking stopped unexpectedly.');
+
+            setState(() {
+              _isTracking = false;
+            });
+
+            _runProgressTracker.pauseRun();
+          },
         );
-
-        setState(() {
-          _playerRunPath.add(
-            newPosition,
-          );
-        });
-
-        _updateRunDistance(
-          newPosition,
-        );
-
-        _checkTerritoryBoundary(
-          newPosition,
-        );
-
-        _googleMapController?.animateCamera(
-          CameraUpdate.newLatLng(
-            newPosition,
-          ),
-        );
-      },
-      onError: (error) {
-        debugPrint(
-          'Location tracking error: $error',
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        _showTopMessage(
-          'Location tracking stopped unexpectedly.',
-        );
-
-        setState(() {
-          _isTracking = false;
-        });
-
-        _runProgressTracker.pauseRun();
-      },
-    );
 
     return true;
   }
@@ -808,9 +652,7 @@ class GMapState extends State<GMap> {
 
     _runProgressTracker.stopRun();
 
-    widget.onDistanceChanged?.call(
-      _runProgressTracker.totalDistanceMetres,
-    );
+    widget.onDistanceChanged?.call(_runProgressTracker.totalDistanceMetres);
   }
 
   Future<bool> _checkLocationPermission() async {
@@ -821,9 +663,7 @@ class GMapState extends State<GMap> {
         return false;
       }
 
-      _showTopMessage(
-        'Please turn on location services.',
-      );
+      _showTopMessage('Please turn on location services.');
 
       return false;
     }
@@ -838,9 +678,7 @@ class GMapState extends State<GMap> {
           return false;
         }
 
-        _showTopMessage(
-          'Location permission was denied.',
-        );
+        _showTopMessage('Location permission was denied.');
 
         return false;
       }
@@ -851,9 +689,7 @@ class GMapState extends State<GMap> {
         return false;
       }
 
-      _showTopMessage(
-        'Location permission is permanently denied.',
-      );
+      _showTopMessage('Location permission is permanently denied.');
 
       return false;
     }
@@ -862,9 +698,7 @@ class GMapState extends State<GMap> {
   }
 
   Future<void> _zoomToRouteOverview(Territory territory) async {
-    final List<LatLng> routePoints = _getRoutePoints(
-      territory,
-    );
+    final List<LatLng> routePoints = _getRoutePoints(territory);
 
     double minLat = routePoints.first.latitude;
     double maxLat = routePoints.first.latitude;
@@ -890,31 +724,19 @@ class GMapState extends State<GMap> {
     }
 
     final LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(
-        minLat,
-        minLng,
-      ),
-      northeast: LatLng(
-        maxLat,
-        maxLng,
-      ),
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
     );
 
     await _googleMapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        bounds,
-        80,
-      ),
+      CameraUpdate.newLatLngBounds(bounds, 80),
     );
   }
 
   Future<void> _zoomToStartingPoint(Territory territory) async {
     await _googleMapController?.animateCamera(
       CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: territory.startPoint,
-          zoom: 17.5,
-        ),
+        CameraPosition(target: territory.startPoint, zoom: 17.5),
       ),
     );
   }
@@ -928,16 +750,11 @@ class GMapState extends State<GMap> {
           backgroundColor: Colors.white,
           title: const Text(
             'Ready to start?',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
           content: Text(
             'You are at the starting point for ${territory.name}. Are you ready to begin?',
-            style: const TextStyle(
-              color: Colors.black,
-            ),
+            style: const TextStyle(color: Colors.black),
           ),
           actions: [
             ElevatedButton(
@@ -949,21 +766,15 @@ class GMapState extends State<GMap> {
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    20,
-                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               onPressed: () {
-                Navigator.of(dialogContext).pop(
-                  false,
-                );
+                Navigator.of(dialogContext).pop(false);
               },
               child: const Text(
                 'No',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             ElevatedButton(
@@ -975,21 +786,15 @@ class GMapState extends State<GMap> {
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    20,
-                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               onPressed: () {
-                Navigator.of(dialogContext).pop(
-                  true,
-                );
+                Navigator.of(dialogContext).pop(true);
               },
               child: const Text(
                 'Yes',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -1001,36 +806,26 @@ class GMapState extends State<GMap> {
   }
 
   Set<Polyline> _getTerritoryPaths() {
-    final Set<Polyline> paths = _territories.map(
-          (territory) {
-        final bool isSelected = territory.id == _selectedTerritoryId;
+    final Set<Polyline> paths = _territories.map((territory) {
+      final bool isSelected = territory.id == _selectedTerritoryId;
 
-        return Polyline(
-          polylineId: PolylineId(
-            territory.id,
-          ),
-          points: _getRoutePoints(
-            territory,
-          ),
-          consumeTapEvents: true,
-          onTap: () {
-            _openTerritoryDetails(
-              territory,
-            );
-          },
-          width: isSelected ? 9 : 6,
-          color: isSelected ? Colors.orange : Colors.blue,
-          geodesic: false,
-        );
-      },
-    ).toSet();
+      return Polyline(
+        polylineId: PolylineId(territory.id),
+        points: _getRoutePoints(territory),
+        consumeTapEvents: true,
+        onTap: () {
+          _openTerritoryDetails(territory);
+        },
+        width: isSelected ? 9 : 6,
+        color: isSelected ? Colors.orange : Colors.blue,
+        geodesic: false,
+      );
+    }).toSet();
 
     if (_playerRunPath.isNotEmpty) {
       paths.add(
         Polyline(
-          polylineId: const PolylineId(
-            'player_live_run_path',
-          ),
+          polylineId: const PolylineId('player_live_run_path'),
           points: _playerRunPath,
           width: 8,
           color: Colors.green,
@@ -1050,9 +845,7 @@ class GMapState extends State<GMap> {
 
       markers.add(
         Marker(
-          markerId: MarkerId(
-            '${territory.id}_start_marker',
-          ),
+          markerId: MarkerId('${territory.id}_start_marker'),
           position: territory.startPoint,
           infoWindow: InfoWindow(
             title: territory.name,
@@ -1062,26 +855,20 @@ class GMapState extends State<GMap> {
             isSelected ? BitmapDescriptor.hueOrange : BitmapDescriptor.hueGreen,
           ),
           onTap: () {
-            _openTerritoryDetails(
-              territory,
-            );
+            _openTerritoryDetails(territory);
           },
         ),
       );
 
       markers.add(
         Marker(
-          markerId: MarkerId(
-            '${territory.id}_finish_marker',
-          ),
+          markerId: MarkerId('${territory.id}_finish_marker'),
           position: territory.endPoint,
           infoWindow: InfoWindow(
             title: '${territory.name} Finish',
             snippet: 'Finish point',
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueRed,
-          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         ),
       );
     }
@@ -1089,13 +876,9 @@ class GMapState extends State<GMap> {
     if (_playerRunPath.isNotEmpty) {
       markers.add(
         Marker(
-          markerId: const MarkerId(
-            'player_current_position',
-          ),
+          markerId: const MarkerId('player_current_position'),
           position: _playerRunPath.last,
-          infoWindow: const InfoWindow(
-            title: 'Your current position',
-          ),
+          infoWindow: const InfoWindow(title: 'Your current position'),
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueAzure,
           ),
@@ -1113,32 +896,24 @@ class GMapState extends State<GMap> {
     final Territory? selectedTerritory = _getSelectedTerritory();
 
     if (selectedTerritory == null) {
-      _showTopMessage(
-        'No territory selected.',
-      );
+      _showTopMessage('No territory selected.');
 
       return;
     }
 
     if (runTime == Duration.zero) {
-      _showTopMessage(
-        'Run time was too short to save.',
-      );
+      _showTopMessage('Run time was too short to save.');
 
       return;
     }
 
     final DocumentReference<Map<String, dynamic>> territoryRef =
-    FirebaseFirestore.instance
-        .collection(
-      'territories',
-    )
-        .doc(
-      selectedTerritory.id,
-    );
+        FirebaseFirestore.instance
+            .collection('territories')
+            .doc(selectedTerritory.id);
 
     final DocumentSnapshot<Map<String, dynamic>> territorySnapshot =
-    await territoryRef.get();
+        await territoryRef.get();
 
     final Map<String, dynamic>? territoryData = territorySnapshot.data();
 
@@ -1162,25 +937,16 @@ class GMapState extends State<GMap> {
         hasNoRecord || newRunSeconds < currentFastestSeconds;
 
     if (isNewFastest) {
-      await territoryRef.set(
-        {
-          'territoryName': selectedTerritory.name,
-          'currentOwner': playerName,
-          'fastestTimeSeconds': newRunSeconds,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(
-          merge: true,
-        ),
-      );
+      await territoryRef.set({
+        'territoryName': selectedTerritory.name,
+        'currentOwner': playerName,
+        'fastestTimeSeconds': newRunSeconds,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-      _showTopMessage(
-        'New King/Queen of ${selectedTerritory.name}!',
-      );
+      _showTopMessage('New King/Queen of ${selectedTerritory.name}!');
     } else {
-      _showTopMessage(
-        'Run saved, but record was not beaten.',
-      );
+      _showTopMessage('Run saved, but record was not beaten.');
     }
   }
 
@@ -1193,10 +959,7 @@ class GMapState extends State<GMap> {
           myLocationButtonEnabled: true,
           myLocationEnabled: _isTracking,
           zoomControlsEnabled: true,
-          minMaxZoomPreference: const MinMaxZoomPreference(
-            10,
-            20,
-          ),
+          minMaxZoomPreference: const MinMaxZoomPreference(10, 20),
           polylines: _getTerritoryPaths(),
           markers: _getTerritoryMarkers(),
           onMapCreated: (controller) {
@@ -1210,14 +973,10 @@ class GMapState extends State<GMap> {
             left: 20,
             right: 20,
             child: Container(
-              padding: const EdgeInsets.all(
-                14,
-              ),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.red,
-                borderRadius: BorderRadius.circular(
-                  16,
-                ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
                 'Warning: You are outside the territory route',
@@ -1235,21 +994,14 @@ class GMapState extends State<GMap> {
           right: 20,
           bottom: 20,
           child: Container(
-            padding: const EdgeInsets.all(
-              16,
-            ),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(
-                18,
-              ),
+              borderRadius: BorderRadius.circular(18),
               boxShadow: const [
                 BoxShadow(
                   blurRadius: 8,
-                  offset: Offset(
-                    0,
-                    3,
-                  ),
+                  offset: Offset(0, 3),
                   color: Colors.black26,
                 ),
               ],
@@ -1261,10 +1013,7 @@ class GMapState extends State<GMap> {
                   ? 'Tracking: $_selectedTerritoryName'
                   : 'Selected: $_selectedTerritoryName',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -1290,21 +1039,14 @@ class TerritoryRecord {
     Duration? fastestTime;
 
     if (fastestTimeValue is int && fastestTimeValue > 0) {
-      fastestTime = Duration(
-        seconds: fastestTimeValue,
-      );
+      fastestTime = Duration(seconds: fastestTimeValue);
     } else if (fastestTimeValue is double && fastestTimeValue > 0) {
-      fastestTime = Duration(
-        seconds: fastestTimeValue.round(),
-      );
+      fastestTime = Duration(seconds: fastestTimeValue.round());
     } else {
       fastestTime = null;
     }
 
-    return TerritoryRecord(
-      currentOwner: owner,
-      fastestTime: fastestTime,
-    );
+    return TerritoryRecord(currentOwner: owner, fastestTime: fastestTime);
   }
 }
 
