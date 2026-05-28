@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
@@ -8,6 +10,8 @@ import '../components/my_buttons.dart';
 import '../components/my_drawer.dart';
 import '../components/my_scrollable_draggable_sheet.dart';
 import '../map/g_map.dart';
+import '../components/step_counter.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -19,11 +23,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final DraggableScrollableController _sheetController =
-  DraggableScrollableController();
-
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
   final GlobalKey<GMapState> _mapKey = GlobalKey<GMapState>();
   final RunTimer _runTimer = RunTimer();
+  final StepCounter _stepCounter = StepCounter();
+  int _steps = 0;
+  double _calories = 0.0;
 
   double _sheetSize = 0.35;
   RunState runState = RunState.idle;
@@ -32,83 +37,11 @@ class _HomePageState extends State<HomePage> {
   double currentDistanceMetres = 0.0;
   String currentUsername = 'Loading...';
 
-  Future<void> _loadCurrentUsername() async {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      setState(() {
-        currentUsername = 'Guest Runner';
-      });
-
-      return;
-    }
-
-    final DocumentSnapshot<Map<String, dynamic>> userDoc =
-    await FirebaseFirestore.instance
-        .collection(
-      'users',
-    )
-        .doc(
-      currentUser.uid,
-    )
-        .get();
-
-    final Map<String, dynamic>? userData = userDoc.data();
-
-    if (userData == null) {
-      setState(() {
-        currentUsername = currentUser.email ?? 'Guest Runner';
-      });
-
-      return;
-    }
-
-    final String? username = userData['username'];
-
-    setState(() {
-      currentUsername = username == null || username.trim().isEmpty
-          ? currentUser.email ?? 'Guest Runner'
-          : username;
-    });
-  }
-
-  Future<String> _getCurrentUsername() async {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      return 'Guest Runner';
-    }
-
-    final DocumentSnapshot<Map<String, dynamic>> userDoc =
-    await FirebaseFirestore.instance
-        .collection(
-      'users',
-    )
-        .doc(
-      currentUser.uid,
-    )
-        .get();
-
-    final Map<String, dynamic>? userData = userDoc.data();
-
-    if (userData == null) {
-      return currentUser.email ?? 'Guest Runner';
-    }
-
-    final String? username = userData['username'];
-
-    if (username == null || username.trim().isEmpty) {
-      return currentUser.email ?? 'Guest Runner';
-    }
-
-    return username;
-  }
+  StreamSubscription<DocumentSnapshot>? _usernameStream;
 
   Future<void> _startRun() async {
     if (runState == RunState.idle) {
-      final bool canStartRun =
-          await _mapKey.currentState?.prepareRunFromSelectedTerritory() ??
-              false;
+      final bool canStartRun = await _mapKey.currentState?.prepareRunFromSelectedTerritory() ?? false;
 
       if (!canStartRun) {
         return;
@@ -120,31 +53,41 @@ class _HomePageState extends State<HomePage> {
         currentDistanceMetres = 0.0;
       });
 
-      // Resets and starts the timer.
-      _runTimer.reset();
-      _runTimer.start(
-            (time) {
-          setState(() {
-            elapsed = time;
-          });
+      // Animates the sheet when running.
+      _sheetController.animateTo(
+        elapsed = Duration.zero; //starts timer
         },
       );
 
-      // Animates the sheet when running.
-      _sheetController.animateTo(
+      _sheetController.animateTo (//animates the sheet when running
         0.25,
         duration: const Duration(
           milliseconds: 300,
         ),
         curve: Curves.easeOut,
       );
+
+      //resets and starts the timer
+      _runTimer.reset();
+      _runTimer.start((time) {
+        setState(() {
+          elapsed = time;
+          _calories = _runTimer.calories; //calculates kCal
+          });
+        },
+      );
+
+      await _stepCounter.start((steps) {
+        setState(() => _steps = steps);
+      });
     }
   }
 
+  //Pausing
   void _pauseRun() {
-    // Pausing.
     if (runState == RunState.running) {
       _runTimer.pause();
+      _stepCounter.pause();
       _mapKey.currentState?.pauseTracking();
 
       setState(() {
@@ -167,24 +110,48 @@ class _HomePageState extends State<HomePage> {
         },
       );
 
-      // Animates the sheet when running.
-      _sheetController.animateTo(
+      _sheetController.animateTo (//animates the sheet when running
+        0.35,
+        duration: const Duration(milliseconds: 300,),
+        curve: Curves.easeOut,
+      );
+    }
+    //Pressing play again
+    else if (runState == RunState.pause) {
+      _mapKey.currentState?.resumeTracking();
+
+      setState(() {
+          runState = RunState.running;
+          _calories = _runTimer.calories; //continues calculation when resume
+        },
+      );
+
+      _runTimer.start((time) {
+        setState(() {
+          elapsed = time;
+          });
+        },
+      );
+
+      _stepCounter.resume((_) {});
+
+      _sheetController.animateTo (//animates the sheet when running
         0.25,
-        duration: const Duration(
-          milliseconds: 300,
-        ),
+        duration: const Duration(milliseconds: 300,),
         curve: Curves.easeOut,
       );
     }
   }
 
   // When run stops, we can save everything here.
+  // when run stops, we can save everything here (timer + later map data)
   Future<void> _stopRun() async {
     _mapKey.currentState?.stopTracking();
 
     lastRun = elapsed;
 
-    final String currentPlayerName = await _getCurrentUsername();
+    final String currentPlayerName = currentUsername;
+    final double finalCalories = _runTimer.calories;
 
     await _runTimer.saveRun();
 
@@ -194,6 +161,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     _runTimer.reset();
+    _stepCounter.reset();
 
     if (!mounted) {
       return;
@@ -208,6 +176,16 @@ class _HomePageState extends State<HomePage> {
 
     // Animates the sheet after run stops.
     _sheetController.animateTo(
+    setState(() {
+        runState = RunState.idle;
+        elapsed = Duration.zero;
+        currentUsername = currentPlayerName;
+        _steps = 0;
+        _calories = finalCalories;
+      },
+    );
+
+    _sheetController.animateTo ( //animates the sheet when running
       0.35,
       duration: const Duration(
         milliseconds: 300,
@@ -221,6 +199,8 @@ class _HomePageState extends State<HomePage> {
     _sheetController.dispose();
     _runTimer.pause();
     _mapKey.currentState?.stopTracking();
+    _stepCounter.stop();
+    _usernameStream?.cancel();
     super.dispose();
   }
 
@@ -228,13 +208,24 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    _loadCurrentUsername();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _usernameStream = FirebaseFirestore.instance
+          .collection('users').doc(user.uid).snapshots().listen((doc) {
+        final data = doc.data();
+        final username = data?['username'];
+        setState(() {
+          currentUsername = (username == null || username.trim().isEmpty) ? user.email ?? 'Guest Runner' : username;
+        });
+      });
 
-    _sheetController.addListener(
-          () {
+    }
+
+    _sheetController.addListener(() {
         setState(() {
           _sheetSize = _sheetController.size;
-        });
+          }
+        );
       },
     );
   }
@@ -248,32 +239,38 @@ class _HomePageState extends State<HomePage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        // foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text(
-          'Home Page',
+          'Homepage Page',
         ),
         actions: [
-          // Scoreboard button.
+          // ---> scoreboard button
           IconButton(
             onPressed: () => Navigator.pushNamed(
               context,
               '/scoreboard_page',
             ),
+
             icon: const Icon(
               Icons.leaderboard_outlined,
             ),
+
             iconSize: 28,
           ),
 
-          // Friends button.
+          // ---> friends button
           IconButton(
             onPressed: () => Navigator.pushNamed(
               context,
               '/my_friends_page',
             ),
+
             icon: const Icon(
               Icons.people_alt_outlined,
             ),
+
             iconSize: 28,
+
           ),
         ],
       ),
@@ -327,6 +324,17 @@ class _HomePageState extends State<HomePage> {
             left: 0,
             child: StartRunButton(
               onTap: _startRun,
+            steps: _steps,
+            calories: _calories,
+          ),
+
+          //START-RUN BUTTON
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0, //bounds
+            child: StartRunButton(
+              onTap: _startRun, // ---> starts the run will link later
               runState: runState,
               elapsed: elapsed,
             ),

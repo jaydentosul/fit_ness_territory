@@ -52,4 +52,47 @@ class AuthService {
       return null;
     }
   }
+
+  //deletes current user account
+  Future<bool> deleteAccount() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      //delete user data frm firestore first
+      await _db.collection('users').doc(user.uid).delete();
+
+      //then delete the login/auth accounts
+      await user.delete();
+
+      //deleting all data related to the user
+      final runs = await _db.collection('runs').where('userId', isEqualTo: user.uid).get();
+      for (final doc in runs.docs) {
+        await doc.reference.delete();
+      }
+
+      //remove from friend list
+      final allUsers = await _db.collection('users').get();
+      for (final doc in allUsers.docs) {
+        await doc.reference.update({
+          'friends': FieldValue.arrayRemove([user.uid]),
+        });
+      }
+
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<void> updateUsername(String newUsername) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _db.collection('users').doc(user.uid).update({
+      'username': newUsername,
+    });
+  }
+
 }

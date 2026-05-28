@@ -32,9 +32,9 @@ class RunService {
     }); // later we can add territory + GPS data here (from map feature)
 
     // update totalRuns
-    await userRef.update({
+    await userRef.set({
       'totalRuns': FieldValue.increment(1),
-    });
+    }, SetOptions(merge: true));
 
     // get current bestRun
     final updatedSnapshot = await userRef.get();
@@ -43,10 +43,10 @@ class RunService {
     final bestRun = updatedData?['bestRun'] ?? 0;
 
     // update bestRun if faster
-    if (bestRun == 0 || time < bestRun) {
-      await userRef.update({
+    if (bestRun == 0 || time > bestRun) {
+      await userRef.set({
         'bestRun': time,
-      }); // this is overall best run for now, can change to per territory later
+      }, SetOptions(merge: true)); // this is overall best run for now, can change to per territory later
     }
   }
 }

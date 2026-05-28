@@ -14,6 +14,8 @@ class MyScrollableDraggableSheet extends StatelessWidget {
   final Duration lastRun;
   final String playerName;
   final double currentDistanceMetres;
+  final int steps;
+  final double calories;
 
   const MyScrollableDraggableSheet({
     super.key,
@@ -38,20 +40,20 @@ class MyScrollableDraggableSheet extends StatelessWidget {
       2,
       '0',
     );
+    required this.steps,
+    required this.calories,
+  });
+
+  String formatTime(Duration time) {
+    final mins = time.inMinutes.toString().padLeft(2, '0');
+    final secs = (time.inSeconds % 60).toString().padLeft(2, '0');
 
     return "$mins:$secs";
   }
 
   String formatSeconds(int seconds) {
-    final mins = (seconds ~/ 60).toString().padLeft(
-      2,
-      '0',
-    );
-
-    final secs = (seconds % 60).toString().padLeft(
-      2,
-      '0',
-    );
+    final mins = (seconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
 
     return "$mins:$secs";
   }
@@ -69,56 +71,46 @@ class MyScrollableDraggableSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final hPadding = const EdgeInsets.symmetric(horizontal: 15);
+    final double stepCalBoxHeight = 180;
 
     return DraggableScrollableSheet(
       controller: controller,
-      initialChildSize: 0.35,
-      minChildSize: 0.25,
-      maxChildSize: 0.85,
+      initialChildSize: 0.35, //initial start of the sheet
+      minChildSize: 0.25,     //lowest length to drag to
+      maxChildSize: 0.65,     //highest length to drag to
       snap: true,
-      snapSizes: const [
-        0.25,
-        0.35,
-        0.85,
-      ],
+      snapSizes: const [0.25, 0.35, 0.65],
+
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.tertiary,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(
-                24,
-              ),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
+
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.only(
-              top: 12,
-            ),
+            padding: const EdgeInsets.only(top: 12),
+
             children: [
-              // Dragging handle.
+              //DRAGGING HANDLE
               Center(
                 child: Container(
                   width: 55,
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.black12,
-                    borderRadius: BorderRadius.circular(
-                      20,
-                    ),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
 
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
 
+              //Player Name
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                ),
+                padding: hPadding,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -126,51 +118,44 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                       child: Text(
                         playerName,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black54,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                     ),
 
-                    (runState == RunState.running ||
-                        runState == RunState.pause)
+                    (runState == RunState.running || runState == RunState.pause)
                         ? Row(
-                      children: [
-                        // Pause / Play.
-                        PauseStopButton(
-                          icon: runState == RunState.pause
-                              ? Icons.play_arrow
-                              : Icons.pause,
-                          onPressed: onPauseRun,
-                        ),
+                            children: [
+                              // PAUSE
+                              PauseStopButton(
+                                icon: runState == RunState.pause
+                                    ? Icons.play_arrow
+                                    : Icons.pause,
+                                onPressed: onPauseRun,
+                              ),
 
-                        const SizedBox(
-                          width: 10,
-                        ),
+                              const SizedBox(width: 10),
 
-                        // Stop.
-                        PauseStopButton(
-                          icon: Icons.stop,
-                          onPressed: onStopRun,
-                        ),
-                      ],
-                    )
+                              // STOP
+                              PauseStopButton(
+                                icon: Icons.stop,
+                                onPressed: onStopRun,
+                              ),
+                            ],
+                          )
                         : const SizedBox(),
                   ],
                 ),
               ),
 
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
 
-              // Shows current run or last run.
+              // shows last run and best run at the bottom of the sheet on player info
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                ),
+                padding: hPadding,
                 child: Text(
                   runState == RunState.running || runState == RunState.pause
                       ? "Current Run: ${formatTime(elapsed)}"
@@ -249,14 +234,97 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                         fontSize: 18,
                         color: Colors.black54,
                       ),
-                    );
-                  },
-                ),
               ),
 
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 50),
+
+              Padding(
+                padding: hPadding,
+                child: Row(
+                  spacing: 20,
+                  children: [
+                    Expanded( // ------> Steps Counter
+                      child: Padding(
+                        padding: EdgeInsets.zero,
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          height: stepCalBoxHeight,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+
+                          //texts
+                          child: Column(
+                            spacing: 20,
+                            children: [
+                              Text(
+                                "STEPS",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              Text(
+                                steps.toString(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.inversePrimary,
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          )
+                        ),
+                      ),
+                    ),
+
+                    Expanded( // ------> Calories Counter
+                      child: Padding(
+                        padding: EdgeInsets.zero,
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          height: stepCalBoxHeight,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+
+                          //texts
+                            child: Column(
+                              spacing: 20,
+                              children: [
+                                Text(
+                                  "CALORIES",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                Text(
+                                  calories.toStringAsFixed(0),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.inversePrimary,
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            )
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              )
             ],
           ),
         );

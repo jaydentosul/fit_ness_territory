@@ -34,7 +34,7 @@ class IntroPage extends StatelessWidget {
 
             //Subtitle
             Text(
-              'What the fuck is going on',
+              'Compete to stay fit',
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.inversePrimary,
