@@ -28,18 +28,6 @@ class MyScrollableDraggableSheet extends StatelessWidget {
     required this.lastRun,
     required this.playerName,
     required this.currentDistanceMetres,
-  });
-
-  String formatTime(Duration time) {
-    final mins = time.inMinutes.toString().padLeft(
-      2,
-      '0',
-    );
-
-    final secs = (time.inSeconds % 60).toString().padLeft(
-      2,
-      '0',
-    );
     required this.steps,
     required this.calories,
   });
@@ -76,16 +64,22 @@ class MyScrollableDraggableSheet extends StatelessWidget {
 
     return DraggableScrollableSheet(
       controller: controller,
-      initialChildSize: 0.35, //initial start of the sheet
-      minChildSize: 0.25,     //lowest length to drag to
-      maxChildSize: 0.65,     //highest length to drag to
+      initialChildSize: 0.35,
+      //initial start of the sheet
+      minChildSize: 0.25,
+      //lowest length to drag to
+      maxChildSize: 0.65,
+      //highest length to drag to
       snap: true,
       snapSizes: const [0.25, 0.35, 0.65],
 
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary,
+            color: Theme
+                .of(context)
+                .colorScheme
+                .tertiary,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
 
@@ -121,31 +115,34 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+                          color: Theme
+                              .of(context)
+                              .colorScheme
+                              .inversePrimary,
                         ),
                       ),
                     ),
 
                     (runState == RunState.running || runState == RunState.pause)
                         ? Row(
-                            children: [
-                              // PAUSE
-                              PauseStopButton(
-                                icon: runState == RunState.pause
-                                    ? Icons.play_arrow
-                                    : Icons.pause,
-                                onPressed: onPauseRun,
-                              ),
+                      children: [
+                        // PAUSE
+                        PauseStopButton(
+                          icon: runState == RunState.pause
+                              ? Icons.play_arrow
+                              : Icons.pause,
+                          onPressed: onPauseRun,
+                        ),
 
-                              const SizedBox(width: 10),
+                        const SizedBox(width: 10),
 
-                              // STOP
-                              PauseStopButton(
-                                icon: Icons.stop,
-                                onPressed: onStopRun,
-                              ),
-                            ],
-                          )
+                        // STOP
+                        PauseStopButton(
+                          icon: Icons.stop,
+                          onPressed: onStopRun,
+                        ),
+                      ],
+                    )
                         : const SizedBox(),
                   ],
                 ),
@@ -159,11 +156,10 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                 child: Text(
                   runState == RunState.running || runState == RunState.pause
                       ? "Current Run: ${formatTime(elapsed)}"
-                      : "Last Run: ${lastRun == Duration.zero ? '--:--' : formatTime(lastRun)}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.black54,
-                  ),
+                      : "Last Run: ${lastRun == Duration.zero
+                      ? '--:--'
+                      : formatTime(lastRun)}",
+                  style: const TextStyle(fontSize: 18, color: Colors.black54),
                 ),
               ),
 
@@ -173,17 +169,12 @@ class MyScrollableDraggableSheet extends StatelessWidget {
 
               // Shows live run distance.
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                ),
+                padding: hPadding,
                 child: Text(
                   runState == RunState.running || runState == RunState.pause
                       ? "Distance: ${formatDistance(currentDistanceMetres)}"
                       : "Distance: --",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.black54,
-                  ),
+                  style: const TextStyle(fontSize: 18, color: Colors.black54),
                 ),
               ),
 
@@ -192,26 +183,13 @@ class MyScrollableDraggableSheet extends StatelessWidget {
               ),
 
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                ),
-                child: user == null
-                    ? const Text(
+                padding: hPadding,
+                child: user == null ? const Text(
                   "Best Run: Not logged in",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.black54,
-                  ),
-                )
-                    : StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection(
-                    'users',
-                  )
-                      .doc(
-                    user.uid,
-                  )
-                      .snapshots(),
+                  style: TextStyle(fontSize: 18, color: Colors.black54),
+                ) : StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(
+                      user.uid).snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData || !snapshot.data!.exists) {
                       return const Text(
@@ -223,17 +201,20 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                       );
                     }
 
-                    final data =
-                    snapshot.data!.data() as Map<String, dynamic>;
+                    final data = snapshot.data!.data() as Map<String, dynamic>;
 
                     final bestRun = data['bestRun'] ?? 0;
 
                     return Text(
-                      "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(bestRun)}",
+                      "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(
+                          bestRun)}",
                       style: const TextStyle(
                         fontSize: 18,
                         color: Colors.black54,
                       ),
+                    );
+                  },
+                ),
               ),
 
               const SizedBox(height: 50),
@@ -247,38 +228,44 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.zero,
                         child: Container(
-                          padding: EdgeInsets.all(4),
-                          height: stepCalBoxHeight,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
+                            padding: EdgeInsets.all(4),
+                            height: stepCalBoxHeight,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .surface,
+                            ),
 
-                          //texts
-                          child: Column(
-                            spacing: 20,
-                            children: [
-                              Text(
-                                "STEPS",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                            //texts
+                            child: Column(
+                              spacing: 20,
+                              children: [
+                                Text(
+                                  "STEPS",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
 
-                              Text(
-                                steps.toString(),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.inversePrimary,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
+                                Text(
+                                  steps.toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Theme
+                                        .of(context)
+                                        .colorScheme
+                                        .inversePrimary,
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          )
+                              ],
+                            )
                         ),
                       ),
                     ),
@@ -287,14 +274,17 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.zero,
                         child: Container(
-                          padding: EdgeInsets.all(4),
-                          height: stepCalBoxHeight,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
+                            padding: EdgeInsets.all(4),
+                            height: stepCalBoxHeight,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .surface,
+                            ),
 
-                          //texts
+                            //texts
                             child: Column(
                               spacing: 20,
                               children: [
@@ -312,7 +302,10 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                                   calories.toStringAsFixed(0),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.inversePrimary,
+                                    color: Theme
+                                        .of(context)
+                                        .colorScheme
+                                        .inversePrimary,
                                     fontSize: 40,
                                     fontWeight: FontWeight.bold,
                                   ),

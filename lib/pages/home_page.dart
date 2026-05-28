@@ -53,12 +53,6 @@ class _HomePageState extends State<HomePage> {
         currentDistanceMetres = 0.0;
       });
 
-      // Animates the sheet when running.
-      _sheetController.animateTo(
-        elapsed = Duration.zero; //starts timer
-        },
-      );
-
       _sheetController.animateTo (//animates the sheet when running
         0.25,
         duration: const Duration(
@@ -172,18 +166,9 @@ class _HomePageState extends State<HomePage> {
       elapsed = Duration.zero;
       currentDistanceMetres = 0.0;
       currentUsername = currentPlayerName;
+      _steps = 0;
+      _calories = finalCalories;
     });
-
-    // Animates the sheet after run stops.
-    _sheetController.animateTo(
-    setState(() {
-        runState = RunState.idle;
-        elapsed = Duration.zero;
-        currentUsername = currentPlayerName;
-        _steps = 0;
-        _calories = finalCalories;
-      },
-    );
 
     _sheetController.animateTo ( //animates the sheet when running
       0.35,
@@ -315,20 +300,11 @@ class _HomePageState extends State<HomePage> {
             lastRun: lastRun,
             playerName: currentUsername,
             currentDistanceMetres: currentDistanceMetres,
-          ),
-
-          // Start-run button.
-          Positioned(
-            bottom: 0,
-            right: 0,
-            left: 0,
-            child: StartRunButton(
-              onTap: _startRun,
             steps: _steps,
             calories: _calories,
           ),
 
-          //START-RUN BUTTON
+          // Start-run button.
           Positioned(
             bottom: 0,
             right: 0,
