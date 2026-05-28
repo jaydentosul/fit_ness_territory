@@ -53,11 +53,9 @@ class _HomePageState extends State<HomePage> {
         currentDistanceMetres = 0.0;
       });
 
-      _sheetController.animateTo (//animates the sheet when running
-        0.25,
-        duration: const Duration(
-          milliseconds: 300,
-        ),
+      //animates the sheet when running
+      _sheetController.animateTo (0.25,
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
 
@@ -88,29 +86,13 @@ class _HomePageState extends State<HomePage> {
         runState = RunState.pause;
       });
 
-      // Pressing play again.
-    } else if (runState == RunState.pause) {
-      _mapKey.currentState?.resumeTracking();
-
-      setState(() {
-        runState = RunState.running;
-      });
-
-      _runTimer.start(
-            (time) {
-          setState(() {
-            elapsed = time;
-          });
-        },
-      );
-
-      _sheetController.animateTo (//animates the sheet when running
-        0.35,
-        duration: const Duration(milliseconds: 300,),
+      //animates the sheet when running
+      _sheetController.animateTo (0.35,
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
-    }
-    //Pressing play again
+
+    } //Pressing play again
     else if (runState == RunState.pause) {
       _mapKey.currentState?.resumeTracking();
 
@@ -138,7 +120,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // When run stops, we can save everything here.
-  // when run stops, we can save everything here (timer + later map data)
   Future<void> _stopRun() async {
     _mapKey.currentState?.stopTracking();
 
@@ -161,7 +142,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    setState(() {
+    setState(() { //resets the run details
       runState = RunState.idle;
       elapsed = Duration.zero;
       currentDistanceMetres = 0.0;
@@ -170,11 +151,9 @@ class _HomePageState extends State<HomePage> {
       _calories = finalCalories;
     });
 
-    _sheetController.animateTo ( //animates the sheet when running
-      0.35,
-      duration: const Duration(
-        milliseconds: 300,
-      ),
+    //animates the sheet when running
+    _sheetController.animateTo (0.35,
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
   }
@@ -200,19 +179,16 @@ class _HomePageState extends State<HomePage> {
         final data = doc.data();
         final username = data?['username'];
         setState(() {
-          currentUsername = (username == null || username.trim().isEmpty) ? user.email ?? 'Guest Runner' : username;
+          currentUsername = (username == null || username.trim().isEmpty)
+              ? user.email ?? 'Guest Runner' : username;
         });
       });
 
     }
 
     _sheetController.addListener(() {
-        setState(() {
-          _sheetSize = _sheetController.size;
-          }
-        );
-      },
-    );
+      setState(() {_sheetSize = _sheetController.size;});
+    });
   }
 
   @override
