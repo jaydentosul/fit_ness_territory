@@ -12,6 +12,12 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TextEditingController getUserAcc = TextEditingController();  //for the account
   TextEditingController getUserPass = TextEditingController(); //for user password
+  
+  //getting the default usernames using the email
+  String getUserName(TextEditingController txtEdtC) {
+    String email = txtEdtC.text.trim();
+    return email.split('@').first;
+  }
 
   final AuthService _authService = AuthService(); // connects to firebase auth + firestore
 
@@ -106,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                             final user = await _authService.signUp(
                               getUserAcc.text.trim(),
                               getUserPass.text.trim(),
-                              getUserAcc.text.trim(),
+                              getUserName(getUserAcc),
                             );
 
                             if (!mounted) return;

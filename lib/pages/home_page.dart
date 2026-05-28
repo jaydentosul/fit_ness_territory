@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
@@ -11,8 +13,7 @@ import '../components/step_counter.dart';
 
 
 class HomePage extends StatefulWidget {
-  const HomePage
-      ({
+  const HomePage({
     super.key,
   });
 
@@ -34,65 +35,7 @@ class _HomePageState extends State<HomePage> {
   Duration lastRun = Duration.zero;
   String currentUsername = 'Loading...';
 
-  Future<void> _loadCurrentUsername() async {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      setState(() {
-        currentUsername = 'Guest Runner';
-      });
-
-      return;
-    }
-
-    final DocumentSnapshot<Map<String, dynamic>> userDoc =
-    await FirebaseFirestore.instance.collection('users',).doc(currentUser.uid,).get();
-
-    final Map<String, dynamic>? userData = userDoc.data();
-
-    if (userData == null) {
-      setState(() {
-        currentUsername = currentUser.email ?? 'Guest Runner';
-      });
-
-      return;
-    }
-
-    final String? username = userData['username'];
-
-    setState(() {
-        currentUsername = username == null || username.trim().isEmpty
-            ? currentUser.email ?? 'Guest Runner'
-            : username;
-      },
-    );
-  }
-
-  Future<String> _getCurrentUsername() async {
-      final User? currentUser = FirebaseAuth.instance.currentUser;
-
-      if (currentUser == null) {
-        return 'Guest Runner';
-      }
-
-      final DocumentSnapshot<Map<String, dynamic>> userDoc =
-      await FirebaseFirestore.instance.collection('users',).doc(
-        currentUser.uid,).get();
-
-      final Map<String, dynamic>? userData = userDoc.data();
-
-      if (userData == null) {
-        return currentUser.email ?? 'Guest Runner';
-      }
-
-      final String? username = userData['username'];
-
-      if (username == null || username.trim().isEmpty) {
-        return currentUser.email ?? 'Guest Runner';
-      }
-
-      return username;
-  }
+  StreamSubscription<DocumentSnapshot>? _usernameStream;
 
   Future<void> _startRun() async {
     if (runState == RunState.idle) {
@@ -183,7 +126,7 @@ class _HomePageState extends State<HomePage> {
 
     lastRun = elapsed;
 
-    final String currentPlayerName = await _getCurrentUsername();
+    final String currentPlayerName = currentUsername;
     final double finalCalories = _runTimer.calories;
 
     await _runTimer.saveRun(); // saves run time to firebase
@@ -220,6 +163,7 @@ class _HomePageState extends State<HomePage> {
     _runTimer.pause();
     _mapKey.currentState?.stopTracking();
     _stepCounter.stop();
+    _usernameStream?.cancel();
     super.dispose();
   }
 
@@ -227,7 +171,18 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    _loadCurrentUsername();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _usernameStream = FirebaseFirestore.instance
+          .collection('users').doc(user.uid).snapshots().listen((doc) {
+        final data = doc.data();
+        final username = data?['username'];
+        setState(() {
+          currentUsername = (username == null || username.trim().isEmpty) ? user.email ?? 'Guest Runner' : username;
+        });
+      });
+
+    }
 
     _sheetController.addListener(() {
         setState(() {
