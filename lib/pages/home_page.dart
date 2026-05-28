@@ -5,9 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
 import 'package:flutter/material.dart';
+
 import '../components/my_buttons.dart';
-import '../components/my_scrollable_draggable_sheet.dart';
 import '../components/my_drawer.dart';
+import '../components/my_scrollable_draggable_sheet.dart';
 import '../map/g_map.dart';
 import '../components/step_counter.dart';
 
@@ -33,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   RunState runState = RunState.idle;
   Duration elapsed = Duration.zero;
   Duration lastRun = Duration.zero;
+  double currentDistanceMetres = 0.0;
   String currentUsername = 'Loading...';
 
   StreamSubscription<DocumentSnapshot>? _usernameStream;
@@ -47,6 +49,12 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         runState = RunState.running;
+        elapsed = Duration.zero;
+        currentDistanceMetres = 0.0;
+      });
+
+      // Animates the sheet when running.
+      _sheetController.animateTo(
         elapsed = Duration.zero; //starts timer
         },
       );
@@ -83,7 +91,22 @@ class _HomePageState extends State<HomePage> {
       _mapKey.currentState?.pauseTracking();
 
       setState(() {
-          runState = RunState.pause;
+        runState = RunState.pause;
+      });
+
+      // Pressing play again.
+    } else if (runState == RunState.pause) {
+      _mapKey.currentState?.resumeTracking();
+
+      setState(() {
+        runState = RunState.running;
+      });
+
+      _runTimer.start(
+            (time) {
+          setState(() {
+            elapsed = time;
+          });
         },
       );
 
@@ -120,6 +143,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // When run stops, we can save everything here.
   // when run stops, we can save everything here (timer + later map data)
   Future<void> _stopRun() async {
     _mapKey.currentState?.stopTracking();
@@ -129,7 +153,7 @@ class _HomePageState extends State<HomePage> {
     final String currentPlayerName = currentUsername;
     final double finalCalories = _runTimer.calories;
 
-    await _runTimer.saveRun(); // saves run time to firebase
+    await _runTimer.saveRun();
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(
       runTime: elapsed,
@@ -139,6 +163,19 @@ class _HomePageState extends State<HomePage> {
     _runTimer.reset();
     _stepCounter.reset();
 
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      runState = RunState.idle;
+      elapsed = Duration.zero;
+      currentDistanceMetres = 0.0;
+      currentUsername = currentPlayerName;
+    });
+
+    // Animates the sheet after run stops.
+    _sheetController.animateTo(
     setState(() {
         runState = RunState.idle;
         elapsed = Duration.zero;
@@ -240,26 +277,35 @@ class _HomePageState extends State<HomePage> {
 
       body: Stack(
         children: [
-          // GOOGLE MAP
-          GMap (
+          // Google Map.
+          GMap(
             key: _mapKey,
+            onDistanceChanged: (distance) {
+              if (!mounted) {
+                return;
+              }
+
+              setState(() {
+                currentDistanceMetres = distance;
+              });
+            },
           ),
 
-          // RESET CAMERA POSITION BUTTON
+          // Reset camera position button.
           Positioned(
             right: 16,
-            bottom: buttonBottom > screenHeight / 2 //if button > halfScreen
+            bottom: buttonBottom > screenHeight / 2
                 ? 10
-                : buttonBottom,              //then 10 else stick to sheet
-            child: ResetLocationButton (
+                : buttonBottom,
+            child: ResetLocationButton(
               onPressed: () {
                 _mapKey.currentState?.resetCamera();
-              }, // ---> reset camera position
+              },
             ),
           ),
 
-          //DRAGGABLE SCROLLABLE SHEET
-          MyScrollableDraggableSheet( // ---> This is the Bottom draggable sheet
+          // Bottom draggable sheet.
+          MyScrollableDraggableSheet(
             controller: _sheetController,
             runState: runState,
             onStartRun: _startRun,
@@ -268,6 +314,16 @@ class _HomePageState extends State<HomePage> {
             elapsed: elapsed,
             lastRun: lastRun,
             playerName: currentUsername,
+            currentDistanceMetres: currentDistanceMetres,
+          ),
+
+          // Start-run button.
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: StartRunButton(
+              onTap: _startRun,
             steps: _steps,
             calories: _calories,
           ),
@@ -286,7 +342,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      drawer: MyDrawer(), // ---> This is the top left menu Drawer
+      drawer: const MyDrawer(),
     );
   }
 }

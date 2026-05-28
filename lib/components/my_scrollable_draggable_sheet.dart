@@ -10,9 +10,10 @@ class MyScrollableDraggableSheet extends StatelessWidget {
   final VoidCallback onStopRun;
   final VoidCallback onPauseRun;
   final RunState runState;
-  final Duration elapsed; // current run time
+  final Duration elapsed;
   final Duration lastRun;
   final String playerName;
+  final double currentDistanceMetres;
   final int steps;
   final double calories;
 
@@ -26,6 +27,19 @@ class MyScrollableDraggableSheet extends StatelessWidget {
     required this.elapsed,
     required this.lastRun,
     required this.playerName,
+    required this.currentDistanceMetres,
+  });
+
+  String formatTime(Duration time) {
+    final mins = time.inMinutes.toString().padLeft(
+      2,
+      '0',
+    );
+
+    final secs = (time.inSeconds % 60).toString().padLeft(
+      2,
+      '0',
+    );
     required this.steps,
     required this.calories,
   });
@@ -42,6 +56,16 @@ class MyScrollableDraggableSheet extends StatelessWidget {
     final secs = (seconds % 60).toString().padLeft(2, '0');
 
     return "$mins:$secs";
+  }
+
+  String formatDistance(double metres) {
+    if (metres < 1000) {
+      return "${metres.toStringAsFixed(0)} m";
+    }
+
+    final double kilometres = metres / 1000;
+
+    return "${kilometres.toStringAsFixed(2)} km";
   }
 
   @override
@@ -136,49 +160,79 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                   runState == RunState.running || runState == RunState.pause
                       ? "Current Run: ${formatTime(elapsed)}"
                       : "Last Run: ${lastRun == Duration.zero ? '--:--' : formatTime(lastRun)}",
-                  style: const TextStyle(fontSize: 18, color: Colors.black54),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
-              //User run Stats
+              // Shows live run distance.
               Padding(
-                padding: hPadding,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                ),
+                child: Text(
+                  runState == RunState.running || runState == RunState.pause
+                      ? "Distance: ${formatDistance(currentDistanceMetres)}"
+                      : "Distance: --",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                height: 10,
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                ),
                 child: user == null
                     ? const Text(
-                        "Best Run: Not logged in",
-                        style: TextStyle(fontSize: 18, color: Colors.black54),
-                      )
+                  "Best Run: Not logged in",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black54,
+                  ),
+                )
                     : StreamBuilder<DocumentSnapshot>(
-                        stream: FirebaseFirestore
-                            .instance //gets the best run from firebase (change to territory later)
-                            .collection('users')
-                            .doc(user.uid)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData || !snapshot.data!.exists) {
-                            return const Text(
-                              "Best Run: --:--",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black54,
-                              ),
-                            );
-                          }
+                  stream: FirebaseFirestore.instance
+                      .collection(
+                    'users',
+                  )
+                      .doc(
+                    user.uid,
+                  )
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return const Text(
+                        "Best Run: --:--",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black54,
+                        ),
+                      );
+                    }
 
-                          final data =
-                              snapshot.data!.data() as Map<String, dynamic>;
-                          final bestRun = data['bestRun'] ?? 0;
+                    final data =
+                    snapshot.data!.data() as Map<String, dynamic>;
 
-                          return Text(
-                            "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(bestRun)}",
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.black54,
-                            ),
-                          );
-                        },
+                    final bestRun = data['bestRun'] ?? 0;
+
+                    return Text(
+                      "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(bestRun)}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black54,
                       ),
               ),
 
