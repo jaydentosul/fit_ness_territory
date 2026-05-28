@@ -1,3 +1,4 @@
+import 'package:fit_ness_territory/pages/view_friends_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,6 +43,11 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
     });
   }
 
+  //deletes friend
+  void deleteFriend(String username) async {
+    await FriendService().deleteFriend(username);
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser; //
@@ -62,7 +68,16 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
               controller: friendController,
               decoration: const InputDecoration(
                 labelText: "Search username",
+                labelStyle: TextStyle(
+                  color: Colors.black
+                ),
                 border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black)
+                )
               ),
               onChanged: (value) {
                 setState(() {
@@ -101,7 +116,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                         final user = users[index];
                         final data = user.data() as Map<String, dynamic>;
 
-                        return ListTile(
+                        return ListTile(  //adds friend
                           leading: const Icon(Icons.person),
                           title: Text(data['username'] ?? 'Unknown'),
                           subtitle: Text(data['email'] ?? ''),
@@ -176,9 +191,23 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                           friendSnapshot.data!.data() as Map<String, dynamic>?;
 
                           return ListTile(
+                            onTap: () { // ----> for viewing player profiles
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ViewFriendPage(friendId: friendId),
+                                ),
+                              );
+                            },
                             leading: const Icon(Icons.person),
                             title: Text(friendData?['username'] ?? 'Unknown'),
                             subtitle: Text(friendData?['email'] ?? ''),
+                            trailing: IconButton( // ----> delete friend
+                                onPressed: () {
+                                  deleteFriend(friendData?['username']);
+                                },
+                                icon: Icon(Icons.delete),
+                            ),
                           );
                         },
                       );

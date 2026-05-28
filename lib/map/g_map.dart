@@ -128,7 +128,7 @@ class GMapState extends State<GMap> {
     ),
     Territory(
       id: 'shakespear_regional_park_track',
-      name: 'Shakespear Regional Park Track',
+      name: 'Shakespear Regional Track',
       startPoint: LatLng(-36.606700, 174.824600),
       endPoint: LatLng(-36.606700, 174.824600),
       waypoints: [

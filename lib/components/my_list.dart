@@ -83,7 +83,7 @@ class MyListTerritory extends StatelessWidget {
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            fontSize: 22
+                            fontSize: 18
                         ),
                       ),
 
@@ -91,7 +91,7 @@ class MyListTerritory extends StatelessWidget {
 
                       Text("Owner: $ownerName",
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 17,
                           color: Colors.white,
                           backgroundColor: Colors.grey.shade600,
                         ),
@@ -101,7 +101,7 @@ class MyListTerritory extends StatelessWidget {
 
                       Text("Best Time: $bestTime",
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 17,
                           color: Colors.white,
                         ),
                       ),

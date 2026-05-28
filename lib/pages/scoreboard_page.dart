@@ -31,10 +31,18 @@ class ScoreboardPage extends StatelessWidget {
           "TERRITORY LEADERS ",
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
         ),
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //
+        //     },
+        //     icon: Icon(Icons.refresh, size: 30,),
+        //   ),
+        // ],
       ),
 
       body: StreamBuilder<QuerySnapshot>(
