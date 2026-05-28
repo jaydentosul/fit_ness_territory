@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
+import 'package:fit_ness_territory/services/run_progress_tracker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -48,8 +49,7 @@ class GMapState extends State<GMap> {
   bool _territoryRecordsLoaded = false;
   bool _isOutsideTerritory = false;
 
-  double _totalDistanceMetres = 0.0;
-  LatLng? _lastTrackedPosition;
+  final RunProgressTracker _runProgressTracker = RunProgressTracker();
 
   final List<LatLng> _playerRunPath = [];
 
@@ -90,7 +90,6 @@ class GMapState extends State<GMap> {
         LatLng(-36.947900, 174.542600),
       ],
     ),
-
     Territory(
       id: 'cornwall_park_one_tree_hill_track',
       name: 'Cornwall Park / One Tree Hill Track',
@@ -119,7 +118,6 @@ class GMapState extends State<GMap> {
         LatLng(-36.901000, 174.783900),
       ],
     ),
-
     Territory(
       id: 'auckland_domain_track',
       name: 'Auckland Domain Track',
@@ -148,7 +146,6 @@ class GMapState extends State<GMap> {
         LatLng(-36.860900, 174.776000),
       ],
     ),
-
     Territory(
       id: 'shakespear_regional_park_track',
       name: 'Shakespear Regional Park Track',
@@ -404,22 +401,18 @@ class GMapState extends State<GMap> {
                   color: Colors.black,
                 ),
               ),
-
               const SizedBox(
                 height: 16,
               ),
-
               Row(
                 children: [
                   const Icon(
                     Icons.emoji_events,
                     color: Colors.orange,
                   ),
-
                   const SizedBox(
                     width: 8,
                   ),
-
                   Expanded(
                     child: Text(
                       'Current Owner: ${_getCurrentOwnerText(territory)}',
@@ -431,22 +424,18 @@ class GMapState extends State<GMap> {
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 12,
               ),
-
               Row(
                 children: [
                   const Icon(
                     Icons.timer,
                     color: Colors.blue,
                   ),
-
                   const SizedBox(
                     width: 8,
                   ),
-
                   Expanded(
                     child: Text(
                       'Fastest Time: ${_getFastestTimeText(territory)}',
@@ -458,11 +447,9 @@ class GMapState extends State<GMap> {
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 20,
               ),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -702,26 +689,13 @@ class GMapState extends State<GMap> {
   }
 
   void _updateRunDistance(LatLng newPosition) {
-    if (_lastTrackedPosition == null) {
-      _lastTrackedPosition = newPosition;
-      widget.onDistanceChanged?.call(_totalDistanceMetres);
-      return;
-    }
-
-    final double addedDistance = Geolocator.distanceBetween(
-      _lastTrackedPosition!.latitude,
-      _lastTrackedPosition!.longitude,
-      newPosition.latitude,
-      newPosition.longitude,
+    _runProgressTracker.updatePosition(
+      newPosition,
     );
 
-    // Ignores very small GPS movement so distance does not increase while standing still.
-    if (addedDistance >= 1.0) {
-      _totalDistanceMetres += addedDistance;
-      widget.onDistanceChanged?.call(_totalDistanceMetres);
-    }
-
-    _lastTrackedPosition = newPosition;
+    widget.onDistanceChanged?.call(
+      _runProgressTracker.totalDistanceMetres,
+    );
   }
 
   Future<bool> startTracking() async {
@@ -737,11 +711,13 @@ class GMapState extends State<GMap> {
       _isTracking = true;
       _isOutsideTerritory = false;
       _playerRunPath.clear();
-      _totalDistanceMetres = 0.0;
-      _lastTrackedPosition = null;
     });
 
-    widget.onDistanceChanged?.call(_totalDistanceMetres);
+    _runProgressTracker.startRun();
+
+    widget.onDistanceChanged?.call(
+      _runProgressTracker.totalDistanceMetres,
+    );
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -793,6 +769,8 @@ class GMapState extends State<GMap> {
         setState(() {
           _isTracking = false;
         });
+
+        _runProgressTracker.pauseRun();
       },
     );
 
@@ -801,6 +779,7 @@ class GMapState extends State<GMap> {
 
   void pauseTracking() {
     _positionStream?.pause();
+    _runProgressTracker.pauseRun();
 
     setState(() {
       _isTracking = false;
@@ -809,6 +788,7 @@ class GMapState extends State<GMap> {
 
   void resumeTracking() {
     _positionStream?.resume();
+    _runProgressTracker.resumeRun();
 
     setState(() {
       _isTracking = true;
@@ -823,12 +803,12 @@ class GMapState extends State<GMap> {
       _isTracking = false;
       _isOutsideTerritory = false;
       _playerRunPath.clear();
-      _totalDistanceMetres = 0.0;
-      _lastTrackedPosition = null;
     });
 
+    _runProgressTracker.stopRun();
+
     widget.onDistanceChanged?.call(
-      _totalDistanceMetres,
+      _runProgressTracker.totalDistanceMetres,
     );
   }
 
@@ -985,7 +965,6 @@ class GMapState extends State<GMap> {
                 ),
               ),
             ),
-
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -1224,7 +1203,6 @@ class GMapState extends State<GMap> {
             _loadRealTerritoryRoutes();
           },
         ),
-
         if (_isOutsideTerritory)
           Positioned(
             top: 90,
@@ -1251,7 +1229,6 @@ class GMapState extends State<GMap> {
               ),
             ),
           ),
-
         Positioned(
           left: 20,
           right: 20,
