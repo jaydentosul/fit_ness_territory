@@ -1,8 +1,10 @@
-import 'package:fit_ness_territory/components/my_buttons.dart';
+import 'dart:io';
+
 import 'package:fit_ness_territory/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 
 /*
 This where the profile stuff goes
@@ -16,9 +18,11 @@ class MyProfilePage extends StatefulWidget {
 }
 
 class _MyProfilePageState extends State<MyProfilePage> {
-  bool _isEditing = false;
   final TextEditingController _usernameController = TextEditingController();
+
   bool _isSaving = false;
+  bool _isEditing = false;
+  bool _isUploadingPhoto = false;
 
   @override
   void dispose() {
@@ -33,6 +37,29 @@ class _MyProfilePageState extends State<MyProfilePage> {
         _usernameController.text = currentUsername;
       }
     });
+  }
+
+  Future<void> _changeProfilePicture() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 512,
+    );
+
+    if (picked == null) return;
+
+    setState(() => _isUploadingPhoto = true);
+
+    await AuthService().uploadProfilePicture(File(picked.path));
+
+    if (!mounted) return;
+    setState(() => _isUploadingPhoto = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Profile Photo Updated"))
+    );
+
   }
 
   Future<void> _saveUsername() async {
@@ -159,20 +186,59 @@ class _MyProfilePageState extends State<MyProfilePage> {
                       children: [
                         Column(
                           children: [
-                            Center(
-                              child: Container(
-                                width: 200,
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(100),
-                                  color: Colors.grey.shade400,
+                            Stack (
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                GestureDetector(
+                                  onTap: _isEditing ? _changeProfilePicture : null,
+                                  child: Container(
+                                    width: 200,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                      color: Colors.grey.shade400,
+                                    ),
+
+                                    child:
+                                    _isUploadingPhoto ? const Center(child: CircularProgressIndicator())
+                                    : ClipRRect(
+                                      borderRadius: BorderRadius.circular(100),
+                                      child: (data?['profilePicUrl'] != null &&
+                                              data!['profilePicUrl'].toString().isNotEmpty)
+                                        ? Image.network(
+                                          data['profilePicUrl'],
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, progress) =>
+                                          progress == null
+                                            ? child : const Center(child: CircularProgressIndicator()),
+                                          errorBuilder: (context, _, __) => Icon(
+                                            Icons.person_4_outlined,
+                                            size: 100,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                        ) : Icon(
+                                          Icons.person_4_outlined,
+                                          size: 100,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                    )
+                                  )
                                 ),
-                                child: Icon(
-                                  Icons.person_4_outlined,
-                                  size: 100,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
+
+                                if (_isEditing)
+                                  Container(
+                                    padding: const EdgeInsets.all(13),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                      size: 20
+                                    ),
+                                  )
+                              ],
                             ),
 
                             const SizedBox(height: 20),
@@ -284,63 +350,63 @@ class _MyProfilePageState extends State<MyProfilePage> {
                         const SizedBox(height: 240),
 
                         // hide delete button while editing
-                        if (!_isEditing)
-                          DeleteAccButton(
-                            onTap: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text("Delete Account"),
-                                  content: const Text(
-                                    "Are you sure you want to delete your account",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text(
-                                        "Cancel",
-                                        style: TextStyle(color: Colors.green),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text(
-                                        "Delete",
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (confirm != true) return;
-
-                              final success = await AuthService().deleteAccount();
-
-                              if (!mounted) return;
-
-                              if (success) {
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/login_page',
-                                );
-                              }
-                            },
-                            buttonIcon: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Delete Account",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    color: Colors.red.shade300,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        // if (!_isEditing)
+                          // DeleteAccButton(
+                          //   onTap: () async {
+                          //     final confirm = await showDialog<bool>(
+                          //       context: context,
+                          //       builder: (context) => AlertDialog(
+                          //         title: const Text("Delete Account"),
+                          //         content: const Text(
+                          //           "Are you sure you want to delete your account",
+                          //         ),
+                          //         actions: [
+                          //           TextButton(
+                          //             onPressed: () =>
+                          //                 Navigator.pop(context, false),
+                          //             child: const Text(
+                          //               "Cancel",
+                          //               style: TextStyle(color: Colors.green),
+                          //             ),
+                          //           ),
+                          //           TextButton(
+                          //             onPressed: () =>
+                          //                 Navigator.pop(context, true),
+                          //             child: const Text(
+                          //               "Delete",
+                          //               style: TextStyle(color: Colors.red),
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     );
+                          //
+                          //     if (confirm != true) return;
+                          //
+                          //     final success = await AuthService().deleteAccount();
+                          //
+                          //     if (!mounted) return;
+                          //
+                          //     if (success) {
+                          //       Navigator.pushReplacementNamed(
+                          //         context,
+                          //         '/login_page',
+                          //       );
+                          //     }
+                          //   },
+                          //   buttonIcon: Row(
+                          //     mainAxisAlignment: MainAxisAlignment.center,
+                          //     children: [
+                          //       Text(
+                          //         "Delete Account",
+                          //         style: TextStyle(
+                          //           fontSize: 24,
+                          //           color: Colors.red.shade300,
+                          //         ),
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
                       ],
                     )
                   );

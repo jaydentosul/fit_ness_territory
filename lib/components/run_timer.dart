@@ -31,9 +31,9 @@ class RunTimer {
 
   // save run to Firebase
   // also can later include map/territory info here too?
-  Future<void> saveRun() async {
+  Future<void> saveRun(String territoryName) async {
     int seconds = _elapsedTime.inSeconds;
 
-    await RunService().saveRun(seconds);
+    await RunService().saveRun(seconds, territoryName);
   }
 }

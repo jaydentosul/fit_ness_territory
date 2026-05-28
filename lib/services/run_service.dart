@@ -12,7 +12,7 @@ class RunService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // saves the run time to firebase and updates user stats
-  Future<void> saveRun(int time) async {
+  Future<void> saveRun(int time, String territoryName) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -23,13 +23,33 @@ class RunService {
     final userData = userSnapshot.data();
     final username = userData?['username'] ?? user.email ?? 'Unknown';
 
-    // save run
-    await _db.collection('runs').add({
-      'userId': user.uid,
-      'username': username,
-      'time': time,
-      'date': Timestamp.now(),
-    }); // later we can add territory + GPS data here (from map feature)
+    //get data from firebase and check if a run exist based on territory
+    final existingRun = await _db
+        .collection('runs')
+        .where('userId', isEqualTo: user.uid)
+        .where('territoryName', isEqualTo: territoryName)
+        .get();
+    //save run of no run exists
+    if (existingRun.docs.isEmpty) {
+      await _db.collection('runs').add({
+        'userId': user.uid,
+        'username': username,
+        'time': time,
+        'date': Timestamp.now(),
+        'territoryName': territoryName,
+      });
+    } else {  //run exists, check fastestTime
+      final existingDoc = existingRun.docs.first;
+      final int existingTime = existingDoc.data()['time'] ?? 0;
+
+      if (time < existingTime) {
+        await existingDoc.reference.update({
+          'time': time,
+          'date': Timestamp.now(),
+          'username': username,
+        });
+      }
+    }
 
     // update totalRuns
     await userRef.set({
@@ -39,7 +59,6 @@ class RunService {
     // get current bestRun
     final updatedSnapshot = await userRef.get();
     final updatedData = updatedSnapshot.data();
-
     final bestRun = updatedData?['bestRun'] ?? 0;
 
     // update bestRun if faster

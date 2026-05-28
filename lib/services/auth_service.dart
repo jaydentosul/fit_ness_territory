@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 // handles firebase login and signup
 // Also saves new user details into firestore
@@ -27,6 +30,7 @@ class AuthService {
           'bestRun': 0,
           'totalRuns': 0,
           'friends': [], // empty list for friends
+          'profilePicUrl': ''
         });
       }
 
@@ -59,16 +63,34 @@ class AuthService {
       final user = _auth.currentUser;
       if (user == null) return false;
 
+      //gets the username before deleting anything
+      final userSnapshot = await _db.collection('users').doc(user.uid).get();
+      final userData = userSnapshot.data();
+      final username = userData?['username'] ?? '';
+
       //delete user data frm firestore first
       await _db.collection('users').doc(user.uid).delete();
 
       //then delete the login/auth accounts
       await user.delete();
 
-      //deleting all data related to the user
+      //deleting all runs related to the user ID
       final runs = await _db.collection('runs').where('userId', isEqualTo: user.uid).get();
       for (final doc in runs.docs) {
         await doc.reference.delete();
+      }
+
+      //remove from leaderboard as well
+      if (username.isNotEmpty) {
+        final territories = await _db.collection('territories')
+            .where('currentOwner', isEqualTo: username).get();
+
+        for (final doc in territories.docs) {
+          await doc.reference.update({
+            'currentOwner' : '',
+            'fastestTimeSeconds' : 0
+          });
+        }
       }
 
       //remove from friend list
@@ -93,6 +115,27 @@ class AuthService {
     await _db.collection('users').doc(user.uid).update({
       'username': newUsername,
     });
+  }
+
+  Future<String?> uploadProfilePicture(File imageFile) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      final ref = FirebaseStorage.instance.ref().child('profile_pictures').child('${user.uid}.jpg');
+
+      await ref.putFile(imageFile);
+      final url = await ref.getDownloadURL();
+
+      await _db.collection('users').doc(user.uid).update({
+        'profilePicUrl': url
+      });
+
+      return url;
+    } catch (e) {
+      print(e);
+      return null;
+    }
   }
 
 }

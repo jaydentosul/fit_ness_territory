@@ -1,4 +1,5 @@
 import 'package:fit_ness_territory/components/my_buttons.dart';
+import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
@@ -150,6 +151,9 @@ class _LoginPageState extends State<LoginPage> {
                             if (!mounted) return;
 
                             if (user != null) {
+                              //sync the territories first before going homePage
+                              TerritorySyncService().syncTerritoryRecords();
+
                               Navigator.pushReplacementNamed(context, '/home_page');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -28,6 +28,10 @@ class GMapState extends State<GMap> {
     zoom: 11.8,
   );
 
+  String? getSelectedTerritoryName() {
+    return _selectedTerritoryName;
+  }
+
   static const double _allowedRouteDistanceMetres = 40.0;
 
   GoogleMapController? _googleMapController;
@@ -80,7 +84,7 @@ class GMapState extends State<GMap> {
     ),
     Territory(
       id: 'cornwall_park_one_tree_hill_track',
-      name: 'Cornwall Park / One Tree Hill Track',
+      name: 'Cornwall Park Track',
       startPoint: LatLng(-36.901000, 174.783900),
       endPoint: LatLng(-36.901000, 174.783900),
       waypoints: [
@@ -944,7 +948,7 @@ class GMapState extends State<GMap> {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      _showTopMessage('New King/Queen of ${selectedTerritory.name}!');
+      _showTopMessage('Congratulations you are the New King/Queen of ${selectedTerritory.name}!');
     } else {
       _showTopMessage('Run saved, but record was not beaten.');
     }

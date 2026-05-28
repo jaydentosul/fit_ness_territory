@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
+import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
 
 import '../components/my_buttons.dart';
@@ -27,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<GMapState> _mapKey = GlobalKey<GMapState>();
   final RunTimer _runTimer = RunTimer();
   final StepCounter _stepCounter = StepCounter();
+
   int _steps = 0;
   double _calories = 0.0;
 
@@ -126,8 +128,9 @@ class _HomePageState extends State<HomePage> {
 
     final String currentPlayerName = currentUsername;
     final double finalCalories = _calories;
+    final String territoryName = _mapKey.currentState?.getSelectedTerritoryName() ?? 'Unknown';
 
-    await _runTimer.saveRun();
+    await _runTimer.saveRun(territoryName);
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(
       runTime: elapsed,
@@ -170,6 +173,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    //sync territory when opening app
+    TerritorySyncService().syncTerritoryRecords();
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
