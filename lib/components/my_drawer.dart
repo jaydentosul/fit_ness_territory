@@ -50,6 +50,18 @@ class MyDrawer extends StatelessWidget {
 
               SizedBox(height: 10), //spacing
 
+              // REPORT TERRITORY
+              MyList(
+                text: 'Report',
+                icon: Icons.report_problem_outlined,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/report_page');
+                },
+              ),
+
+              SizedBox(height: 10),
+
               // SETTINGS
               MyList(
                 text: 'Settings',

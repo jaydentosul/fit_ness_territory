@@ -1,6 +1,7 @@
 import 'package:fit_ness_territory/components/my_buttons.dart';
 import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,171 +12,244 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController getUserAcc = TextEditingController();  //for the account
-  TextEditingController getUserPass = TextEditingController(); //for user password
-  
-  //getting the default usernames using the email
+
+  // account + password controllers
+  TextEditingController getUserAcc = TextEditingController();
+  TextEditingController getUserPass = TextEditingController();
+
+  // gets username from email
   String getUserName(TextEditingController txtEdtC) {
     String email = txtEdtC.text.trim();
     return email.split('@').first;
   }
 
-  final AuthService _authService = AuthService(); // connects to firebase auth + firestore
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+
       appBar: AppBar(
-        title: Text('Login Page'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 0,
       ),
 
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(50),
-          child: Column(
-            // mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 1),
+        child: SingleChildScrollView(
 
-              //LOGO ICON
-              Image.asset(
-                'assets/logo.png',
-                width: 100,
-                height: 100,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 35),
 
-              SizedBox(height: 10), //spacing
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
 
-              //SUBTITLE
-              Text(
-                'Please login with you FitNess Territory\n'
-                    'account to get started',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.inversePrimary
+                // LOGO
+                Image.asset(
+                  'assets/logo.png',
+                  width: 110,
+                  height: 110,
                 ),
-                textAlign: TextAlign.center,
-              ),
 
-              SizedBox(height: 10), //spacing
+                const SizedBox(height: 20),
 
-              //ACCOUNT TEXT FIELD
-              SizedBox(
-                height: 45,
-                child: TextField(
+                // TITLE
+                Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // SUBTITLE
+                Text(
+                  'Login with your FitNess Territory account',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 35),
+
+                // EMAIL FIELD
+                TextField(
                   controller: getUserAcc,
+
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                  ),
+
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.secondary,
-                      hintText: "Username@email.com",
-                      hintStyle: TextStyle(
-                        color: Colors.grey.shade500,
-                      )
+                    hintText: "Username@email.com",
+
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                    ),
+
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                      color: Colors.grey,
+                    ),
+
+                    filled: true,
+                    fillColor: Colors.white,
+
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
 
-              SizedBox(height: 10), //spacing
+                const SizedBox(height: 15),
 
-              // password text
-              SizedBox(
-                height: 45,
-                child: TextField(
+                // PASSWORD FIELD
+                TextField(
                   controller: getUserPass,
-                  obscureText: true, //hides the text
+                  obscureText: true,
+
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                  ),
+
                   decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.secondary,
-                      hintText: "Password",
-                      hintStyle: TextStyle(
-                        color: Colors.grey.shade500,
-                      )
+                    hintText: "Password",
+
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                    ),
+
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Colors.grey,
+                    ),
+
+                    filled: true,
+                    fillColor: Colors.white,
+
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
 
-              SizedBox(height: 10), //spacing
+                const SizedBox(height: 25),
 
-              // login buttons
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children:[
-                    /*
-                  The login and register will be linked to the database but
-                  for now only the login works as it goes to the homePage
-                   */
-                    Expanded( // REGISTER BUTTON
+                // BUTTONS
+                Row(
+                  children: [
+
+                    // REGISTER BUTTON
+                    Expanded(
                       child: ButtonTwo(
-                          onTap: () async { //handles user signup using firebase
-                            final user = await _authService.signUp(
-                              getUserAcc.text.trim(),
-                              getUserPass.text.trim(),
-                              getUserName(getUserAcc),
+                        onTap: () async {
+
+                          final user = await _authService.signUp(
+                            getUserAcc.text.trim(),
+                            getUserPass.text.trim(),
+                            getUserName(getUserAcc),
+                          );
+
+                          if (!mounted) return;
+
+                          if (user != null) {
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Account Created"),
+                              ),
                             );
 
-                            if (!mounted) return;
+                          } else {
 
-                            if (user !=null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Account Created")),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Signup Failed")),
-                              );
-                            }
-                          }, // ----> this goes to registering a new account
-                          buttonIcon: Text(
-                            'Register',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          )
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Signup Failed"),
+                              ),
+                            );
+                          }
+                        },
+
+                        buttonIcon: const Text(
+                          'Register',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
 
-                    SizedBox(width: 6), //spacing
+                    const SizedBox(width: 10),
 
-                    Expanded( // login
+                    // LOGIN BUTTON
+                    Expanded(
                       child: ButtonTwo(
-                          onTap: () async { //handles user login using firebase
-                            final user = await _authService.login(
-                              getUserAcc.text.trim(),
-                              getUserPass.text.trim(),
+                        onTap: () async {
+
+                          final user = await _authService.login(
+                            getUserAcc.text.trim(),
+                            getUserPass.text.trim(),
+                          );
+
+                          if (!mounted) return;
+
+                          if (user != null) {
+
+                            // sync territories before home page
+                            TerritorySyncService()
+                                .syncTerritoryRecords();
+
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/home_page',
                             );
 
-                            if (!mounted) return;
+                          } else {
 
-                            if (user != null) {
-                              //sync the territories first before going homePage
-                              TerritorySyncService().syncTerritoryRecords();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Login Failed"),
+                              ),
+                            );
+                          }
+                        },
 
-                              Navigator.pushReplacementNamed(context, '/home_page');
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Login Failed"))
-                              );
-                            }
-                          },
-                          buttonIcon: Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          )
+                        buttonIcon: const Text(
+                          'Login',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ]
-              ),
+                  ],
+                ),
 
-              const Spacer(flex: 2),
-
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

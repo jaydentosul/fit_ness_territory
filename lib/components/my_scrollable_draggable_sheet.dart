@@ -35,14 +35,12 @@ class MyScrollableDraggableSheet extends StatelessWidget {
   String formatTime(Duration time) {
     final mins = time.inMinutes.toString().padLeft(2, '0');
     final secs = (time.inSeconds % 60).toString().padLeft(2, '0');
-
     return "$mins:$secs";
   }
 
   String formatSeconds(int seconds) {
     final mins = (seconds ~/ 60).toString().padLeft(2, '0');
     final secs = (seconds % 60).toString().padLeft(2, '0');
-
     return "$mins:$secs";
   }
 
@@ -52,57 +50,109 @@ class MyScrollableDraggableSheet extends StatelessWidget {
     }
 
     final double kilometres = metres / 1000;
-
     return "${kilometres.toStringAsFixed(2)} km";
+  }
+
+  Widget statCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required BuildContext context,
+  }) {
+    return Expanded(
+      child: Container(
+        height: 150,
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: Colors.green,
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              value,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final hPadding = const EdgeInsets.symmetric(horizontal: 15);
-    final double stepCalBoxHeight = 180;
+    final hPadding = const EdgeInsets.symmetric(horizontal: 18);
 
     return DraggableScrollableSheet(
       controller: controller,
-      initialChildSize: 0.35,
-      //initial start of the sheet
-      minChildSize: 0.25,
-      //lowest length to drag to
-      maxChildSize: 0.65,
-      //highest length to drag to
+      initialChildSize: 0.42,
+      minChildSize: 0.28,
+      maxChildSize: 0.70,
       snap: true,
-      snapSizes: const [0.25, 0.35, 0.65],
+      snapSizes: const [0.28, 0.42, 0.70],
 
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .tertiary,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            color: Theme.of(context).colorScheme.tertiary,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(28),
+            ),
           ),
 
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 12, bottom: 110),
 
             children: [
-              //DRAGGING HANDLE
+              // dragging handle
               Center(
                 child: Container(
                   width: 55,
-                  height: 4,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.black12,
+                    color: Colors.black26,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 22),
 
-              //Player Name
+              // player name + pause/stop buttons
               Padding(
                 padding: hPadding,
                 child: Row(
@@ -115,10 +165,7 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Theme
-                              .of(context)
-                              .colorScheme
-                              .inversePrimary,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                     ),
@@ -126,7 +173,6 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                     (runState == RunState.running || runState == RunState.pause)
                         ? Row(
                       children: [
-                        // PAUSE
                         PauseStopButton(
                           icon: runState == RunState.pause
                               ? Icons.play_arrow
@@ -136,7 +182,6 @@ class MyScrollableDraggableSheet extends StatelessWidget {
 
                         const SizedBox(width: 10),
 
-                        // STOP
                         PauseStopButton(
                           icon: Icons.stop,
                           onPressed: onStopRun,
@@ -148,176 +193,218 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 18),
 
-              // shows last run and best run at the bottom of the sheet on player info
+              // run info card
               Padding(
                 padding: hPadding,
-                child: Text(
-                  runState == RunState.running || runState == RunState.pause
-                      ? "Current Run: ${formatTime(elapsed)}"
-                      : "Last Run: ${lastRun == Duration.zero
-                      ? '--:--'
-                      : formatTime(lastRun)}",
-                  style: const TextStyle(fontSize: 18, color: Colors.black54),
-                ),
-              ),
-
-              const SizedBox(
-                height: 10,
-              ),
-
-              // Shows live run distance.
-              Padding(
-                padding: hPadding,
-                child: Text(
-                  runState == RunState.running || runState == RunState.pause
-                      ? "Distance: ${formatDistance(currentDistanceMetres)}"
-                      : "Distance: --",
-                  style: const TextStyle(fontSize: 18, color: Colors.black54),
-                ),
-              ),
-
-              const SizedBox(
-                height: 10,
-              ),
-
-              Padding(
-                padding: hPadding,
-                child: user == null ? const Text(
-                  "Best Run: Not logged in",
-                  style: TextStyle(fontSize: 18, color: Colors.black54),
-                ) : StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance.collection('users').doc(
-                      user.uid).snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return const Text(
-                        "Best Run: --:--",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black54,
-                        ),
-                      );
-                    }
-
-                    final data = snapshot.data!.data() as Map<String, dynamic>;
-
-                    final bestRun = data['bestRun'] ?? 0;
-
-                    return Text(
-                      "Best Run: ${bestRun == 0 ? '--:--' : formatSeconds(
-                          bestRun)}",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.black54,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
-                    );
-                  },
+                    ],
+                  ),
+
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, color: Colors.green),
+
+                          const SizedBox(width: 10),
+
+                          Expanded(
+                            child: Text(
+                              runState == RunState.running ||
+                                  runState == RunState.pause
+                                  ? "Current Run"
+                                  : "Last Run",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            runState == RunState.running ||
+                                runState == RunState.pause
+                                ? formatTime(elapsed)
+                                : lastRun == Duration.zero
+                                ? "--:--"
+                                : formatTime(lastRun),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          const Icon(Icons.route_outlined, color: Colors.green),
+
+                          const SizedBox(width: 10),
+
+                          Expanded(
+                            child: Text(
+                              "Distance",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            runState == RunState.running ||
+                                runState == RunState.pause
+                                ? formatDistance(currentDistanceMetres)
+                                : "--",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      user == null
+                          ? Row(
+                        children: [
+                          const Icon(Icons.emoji_events_outlined,
+                              color: Colors.green),
+                          const SizedBox(width: 10),
+                          Text(
+                            "Best Run: Not logged in",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      )
+                          : StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData ||
+                              !snapshot.data!.exists) {
+                            return Row(
+                              children: [
+                                const Icon(Icons.emoji_events_outlined,
+                                    color: Colors.green),
+                                const SizedBox(width: 10),
+                                Text(
+                                  "Best Run",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  "--:--",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .inversePrimary,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
+                          final data = snapshot.data!.data()
+                          as Map<String, dynamic>;
+
+                          final bestRun = data['bestRun'] ?? 0;
+
+                          return Row(
+                            children: [
+                              const Icon(Icons.emoji_events_outlined,
+                                  color: Colors.green),
+
+                              const SizedBox(width: 10),
+
+                              Text(
+                                "Best Run",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+
+                              const Spacer(),
+
+                              Text(
+                                bestRun == 0
+                                    ? "--:--"
+                                    : formatSeconds(bestRun),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
+              // steps + calories
               Padding(
                 padding: hPadding,
                 child: Row(
-                  spacing: 20,
                   children: [
-                    Expanded( // ------> Steps Counter
-                      child: Padding(
-                        padding: EdgeInsets.zero,
-                        child: Container(
-                            padding: EdgeInsets.all(4),
-                            height: stepCalBoxHeight,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              color: Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .surface,
-                            ),
-
-                            //texts
-                            child: Column(
-                              spacing: 20,
-                              children: [
-                                Text(
-                                  "STEPS",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade400,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                Text(
-                                  steps.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Theme
-                                        .of(context)
-                                        .colorScheme
-                                        .inversePrimary,
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            )
-                        ),
-                      ),
+                    statCard(
+                      title: "STEPS",
+                      value: steps.toString(),
+                      icon: Icons.directions_walk,
+                      context: context,
                     ),
 
-                    Expanded( // ------> Calories Counter
-                      child: Padding(
-                        padding: EdgeInsets.zero,
-                        child: Container(
-                            padding: EdgeInsets.all(4),
-                            height: stepCalBoxHeight,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              color: Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .surface,
-                            ),
+                    const SizedBox(width: 16),
 
-                            //texts
-                            child: Column(
-                              spacing: 20,
-                              children: [
-                                Text(
-                                  "CALORIES",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade400,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                Text(
-                                  calories.toStringAsFixed(0),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Theme
-                                        .of(context)
-                                        .colorScheme
-                                        .inversePrimary,
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            )
-                        ),
-                      ),
-                    )
+                    statCard(
+                      title: "CALORIES",
+                      value: calories.toStringAsFixed(0),
+                      icon: Icons.local_fire_department_outlined,
+                      context: context,
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         );
