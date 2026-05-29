@@ -43,181 +43,261 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
     });
   }
 
-  //deletes friend
+  // deletes friend
   void deleteFriend(String username) async {
     await FriendService().deleteFriend(username);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Friend removed")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser; //
+    final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('My Friends Page'),
+        title: const Text('My Friends'),
       ),
 
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: friendController,
-              decoration: const InputDecoration(
-                labelText: "Search username",
-                labelStyle: TextStyle(
-                  color: Colors.black
-                ),
-                border: OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black)
-                )
+        children: [
+          const Icon(
+            Icons.people_alt_outlined,
+            size: 70,
+            color: Colors.green,
+          ),
+
+          const SizedBox(height: 10),
+
+          Center(
+            child: Text(
+              "Find Friends",
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
-              onChanged: (value) {
-                setState(() {
-                  searchText = value.trim();
-                });
-              },
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 8),
 
-            if (searchText.isEmpty)
-              const Text("Search for a username to add a friend"),
-
-            if (searchText.isNotEmpty)
-              SizedBox(
-                height: 120,
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .where('username', isEqualTo: searchText)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    final users = snapshot.data!.docs;
-
-                    if (users.isEmpty) {
-                      return const Center(child: Text("No user found"));
-                    }
-
-                    return ListView.builder(
-                      itemCount: users.length,
-                      itemBuilder: (context, index) {
-                        final user = users[index];
-                        final data = user.data() as Map<String, dynamic>;
-
-                        return ListTile(  //adds friend
-                          leading: const Icon(Icons.person),
-                          title: Text(data['username'] ?? 'Unknown'),
-                          subtitle: Text(data['email'] ?? ''),
-                          trailing: ElevatedButton(
-                            onPressed: () {
-                              addFriend(data['username']);
-                            },
-                            child: const Text("Add Friend"),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+          const Center(
+            child: Text(
+              "Search for users and add them to your friends list.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.black54,
               ),
+            ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 25),
 
-            // shows current friends (maybe add remove button later?)
-            const Align(
-              alignment: Alignment.centerLeft,
+          TextField(
+            controller: friendController,
+            style: const TextStyle(color: Colors.black),
+            decoration: InputDecoration(
+              hintText: "Search username",
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {
+                searchText = value.trim();
+              });
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          if (searchText.isEmpty)
+            const Center(
               child: Text(
-                "My Friends",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                "Search for a username to add a friend",
+                style: TextStyle(color: Colors.black54),
               ),
             ),
 
-            const SizedBox(height: 10),
-
-            Expanded(
-              child: currentUser == null
-                  ? const Center(child: Text("Not logged in"))
-                  : StreamBuilder<DocumentSnapshot>(
+          if (searchText.isNotEmpty)
+            SizedBox(
+              height: 120,
+              child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
-                    .doc(currentUser.uid)
+                    .where('username', isEqualTo: searchText)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final data = snapshot.data!.data() as Map<String, dynamic>?;
-                  final friends = List<String>.from(data?['friends'] ?? []);
+                  final users = snapshot.data!.docs;
 
-                  if (friends.isEmpty) {
-                    return const Center(child: Text("No friends added yet"));
+                  if (users.isEmpty) {
+                    return const Center(child: Text("No user found"));
                   }
 
                   return ListView.builder(
-                    itemCount: friends.length,
+                    itemCount: users.length,
                     itemBuilder: (context, index) {
-                      final friendId = friends[index];
+                      final user = users[index];
+                      final data = user.data() as Map<String, dynamic>;
 
-                      return FutureBuilder<DocumentSnapshot>(
-                        future: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(friendId)
-                            .get(),
-                        builder: (context, friendSnapshot) {
-                          if (!friendSnapshot.hasData) {
-                            return const ListTile(
-                              leading: Icon(Icons.person),
-                              title: Text("Loading friend..."),
-                            );
-                          }
-
-                          final friendData =
-                          friendSnapshot.data!.data() as Map<String, dynamic>?;
-
-                          return ListTile(
-                            onTap: () { // ----> for viewing player profiles
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ViewFriendPage(friendId: friendId),
-                                ),
-                              );
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text(data['username'] ?? 'Unknown'),
+                          subtitle: Text(data['email'] ?? ''),
+                          trailing: ElevatedButton(
+                            onPressed: () {
+                              addFriend(data['username']);
                             },
-                            leading: const Icon(Icons.person),
-                            title: Text(friendData?['username'] ?? 'Unknown'),
-                            subtitle: Text(friendData?['email'] ?? ''),
-                            trailing: IconButton( // ----> delete friend
-                                onPressed: () {
-                                  deleteFriend(friendData?['username']);
-                                },
-                                icon: Icon(Icons.delete),
-                            ),
-                          );
-                        },
+                            child: const Text("Add"),
+                          ),
+                        ),
                       );
                     },
                   );
                 },
               ),
             ),
-          ],
-        ),
+
+          const SizedBox(height: 25),
+
+          Text(
+            "My Friends",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          currentUser == null
+              ? const Center(child: Text("Not logged in"))
+              : StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUser.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final data =
+              snapshot.data!.data() as Map<String, dynamic>?;
+
+              final friends =
+              List<String>.from(data?['friends'] ?? []);
+
+              if (friends.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 30),
+                  child: Center(
+                    child: Text(
+                      "No friends added yet",
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: friends.length,
+                itemBuilder: (context, index) {
+                  final friendId = friends[index];
+
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(friendId)
+                        .get(),
+                    builder: (context, friendSnapshot) {
+                      if (!friendSnapshot.hasData) {
+                        return const ListTile(
+                          leading: Icon(Icons.person),
+                          title: Text("Loading friend..."),
+                        );
+                      }
+
+                      final friendData = friendSnapshot.data!.data()
+                      as Map<String, dynamic>?;
+
+                      final username =
+                          friendData?['username'] ?? 'Unknown';
+
+                      final email = friendData?['email'] ?? '';
+
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ViewFriendPage(friendId: friendId),
+                              ),
+                            );
+                          },
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text(
+                            username,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(email),
+                          trailing: IconButton(
+                            onPressed: () {
+                              deleteFriend(username);
+                            },
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
