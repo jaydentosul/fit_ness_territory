@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fit_ness_territory/services/auth_service.dart';
@@ -205,18 +206,20 @@ class _MyProfilePageState extends State<MyProfilePage> {
                                       borderRadius: BorderRadius.circular(100),
                                       child: (data?['profilePicUrl'] != null &&
                                               data!['profilePicUrl'].toString().isNotEmpty)
-                                        ? Image.network(
-                                          data['profilePicUrl'],
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child, progress) =>
-                                          progress == null
-                                            ? child : const Center(child: CircularProgressIndicator()),
-                                          errorBuilder: (context, _, __) => Icon(
-                                            Icons.person_4_outlined,
-                                            size: 100,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                        ) : Icon(
+                                        ? Builder(builder: (context) {
+                                          final url = data['profilePicUrl'] as String;
+                                          //decodes the base64 for the image
+                                          if (url.startsWith('data:image')) {
+                                            final base64Str = url.split(',').last;
+                                            final bytes = base64Decode(base64Str);
+                                            return Image.memory(
+                                              bytes,
+                                              fit: BoxFit.cover,
+                                              width: 200,
+                                              height: 200,
+                                            );
+                                          } return Image.network('null'); //if change to firestore then use Image.network
+                                      }) : Icon(
                                           Icons.person_4_outlined,
                                           size: 100,
                                           color: Colors.grey.shade500,
@@ -243,7 +246,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
                             const SizedBox(height: 20),
 
-                            // username: text field in edit mode, plain text otherwise
+                            // username text field in edit mode, plain text otherwise
                             _isEditing
                                 ? Padding(
                               padding: const EdgeInsets.symmetric(
@@ -346,67 +349,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
                             ),
                           ],
                         ),
-
-                        const SizedBox(height: 240),
-
-                        // hide delete button while editing
-                        // if (!_isEditing)
-                          // DeleteAccButton(
-                          //   onTap: () async {
-                          //     final confirm = await showDialog<bool>(
-                          //       context: context,
-                          //       builder: (context) => AlertDialog(
-                          //         title: const Text("Delete Account"),
-                          //         content: const Text(
-                          //           "Are you sure you want to delete your account",
-                          //         ),
-                          //         actions: [
-                          //           TextButton(
-                          //             onPressed: () =>
-                          //                 Navigator.pop(context, false),
-                          //             child: const Text(
-                          //               "Cancel",
-                          //               style: TextStyle(color: Colors.green),
-                          //             ),
-                          //           ),
-                          //           TextButton(
-                          //             onPressed: () =>
-                          //                 Navigator.pop(context, true),
-                          //             child: const Text(
-                          //               "Delete",
-                          //               style: TextStyle(color: Colors.red),
-                          //             ),
-                          //           ),
-                          //         ],
-                          //       ),
-                          //     );
-                          //
-                          //     if (confirm != true) return;
-                          //
-                          //     final success = await AuthService().deleteAccount();
-                          //
-                          //     if (!mounted) return;
-                          //
-                          //     if (success) {
-                          //       Navigator.pushReplacementNamed(
-                          //         context,
-                          //         '/login_page',
-                          //       );
-                          //     }
-                          //   },
-                          //   buttonIcon: Row(
-                          //     mainAxisAlignment: MainAxisAlignment.center,
-                          //     children: [
-                          //       Text(
-                          //         "Delete Account",
-                          //         style: TextStyle(
-                          //           fontSize: 24,
-                          //           color: Colors.red.shade300,
-                          //         ),
-                          //       ),
-                          //     ],
-                          //   ),
-                          // ),
                       ],
                     )
                   );

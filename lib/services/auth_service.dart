@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 // handles firebase login and signup
 // Also saves new user details into firestore
@@ -121,17 +121,16 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) return null;
 
-    try {
-      final ref = FirebaseStorage.instance.ref().child('profile_pictures').child('${user.uid}.jpg');
-
-      await ref.putFile(imageFile);
-      final url = await ref.getDownloadURL();
+    try {//convert the image to base64 coz storage is an upgrade plan
+      final bytes = await imageFile.readAsBytes();
+      final base64Str = base64Encode(bytes);
+      final dataUrl = 'data:image/jpeg;base64,$base64Str';
 
       await _db.collection('users').doc(user.uid).update({
-        'profilePicUrl': url
+        'profilePicUrl': dataUrl,
       });
 
-      return url;
+      return dataUrl;
     } catch (e) {
       print(e);
       return null;

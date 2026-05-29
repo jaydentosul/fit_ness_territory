@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fit_ness_territory/pages/view_friends_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -51,6 +53,22 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Friend removed")),
+    );
+  }
+
+  //method for reusing
+  Widget _buildAvatar(Map<String, dynamic>? data) {
+    final url = data?['profilePicUrl'] as String?;
+
+    if (url != null && url.isNotEmpty && url.startsWith('data:image')) {
+      final bytes = base64Decode(url.split(',').last);
+      return CircleAvatar(
+        backgroundImage: MemoryImage(bytes),
+      );
+    }
+
+    return const CircleAvatar(
+      child: Icon(Icons.person),
     );
   }
 
@@ -164,12 +182,13 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: ListTile(
-                          leading: const CircleAvatar(
-                            child: Icon(Icons.person),
-                          ),
+                          leading: _buildAvatar(data),
                           title: Text(data['username'] ?? 'Unknown'),
                           subtitle: Text(data['email'] ?? ''),
                           trailing: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                            ),
                             onPressed: () {
                               addFriend(data['username']);
                             },
@@ -270,9 +289,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                               ),
                             );
                           },
-                          leading: const CircleAvatar(
-                            child: Icon(Icons.person),
-                          ),
+                          leading: _buildAvatar(friendData),
                           title: Text(
                             username,
                             style: const TextStyle(
