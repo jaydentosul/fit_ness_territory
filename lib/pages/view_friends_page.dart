@@ -39,6 +39,13 @@ class ViewFriendPage extends StatelessWidget {
           final totalSteps = data?['totalSteps'] ?? 0;
           final distanceTravelled = data?['distanceTravelled'] ?? 0.0;
           final totalCalories = data?['totalCalories'] ?? 0.0;
+          final isPrivate = data?['isPrivate'] ?? false;
+
+          if (isPrivate) {
+            return const Center(
+              child: Text("This profile is private"),
+            );
+          }
 
           return SingleChildScrollView(
             child: Column(

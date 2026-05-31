@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -235,13 +236,18 @@ class _SettingsPage extends State<SettingsPage> {
                   title: const Text("Private Profile"),
                   subtitle: const Text("Hide profile from other users"),
                   value: privateProfile,
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     AppSettingsService.privateProfile.value = value;
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      await FirebaseFirestore.instance.collection('users').doc(
+                          user.uid).update({'isPrivate': value});
+                    }
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                          value
+                        content: Text(value
                               ? "Profile set to private"
                               : "Profile set to public",
                         ),

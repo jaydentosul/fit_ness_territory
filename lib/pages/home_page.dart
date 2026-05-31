@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
+import 'package:fit_ness_territory/services/app_settings_service.dart';
 import 'package:fit_ness_territory/services/run_service.dart';
 import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
@@ -178,9 +179,17 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  Future<void> _loadPrivacySetting() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    AppSettingsService.privateProfile.value = doc.data()?['isPrivate'] ?? false;
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadPrivacySetting();
 
     //sync territory when opening app
     TerritorySyncService().syncTerritoryRecords();

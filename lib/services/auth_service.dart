@@ -34,7 +34,8 @@ class AuthService {
           'totalRunTime': 0,
           'totalSteps': 0,
           'distanceTravelled': 0.0,
-          'totalCalories': 0.0
+          'totalCalories': 0.0,
+          'isPrivate': false
         });
       }
 
