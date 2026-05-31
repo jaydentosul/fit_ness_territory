@@ -27,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTapped = false;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -244,9 +243,6 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
 
                 GestureDetector(
-                  onTapDown: (_) => setState(() => isTapped = true),
-                  onTapUp: (_) => setState(() => isTapped = false),
-                  onTapCancel: () => setState(() => isTapped = false),
                   onTap: () async {
                     final email = getUserAcc.text.trim();
                     if (email.isEmpty) {
