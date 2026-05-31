@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:fit_ness_territory/components/my_profile_avatar.dart';
 import 'package:fit_ness_territory/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,10 +20,11 @@ class MyProfilePage extends StatefulWidget {
 
 class _MyProfilePageState extends State<MyProfilePage> {
   final TextEditingController _usernameController = TextEditingController();
+  File? _pendingImage;  //stores picked image before saving to fireBase
 
   bool _isSaving = false;
   bool _isEditing = false;
-  bool _isUploadingPhoto = false;
+  final bool _isUploadingPhoto = false;
 
   @override
   void dispose() {
@@ -36,6 +37,8 @@ class _MyProfilePageState extends State<MyProfilePage> {
       _isEditing = !_isEditing;
       if (_isEditing) {
         _usernameController.text = currentUsername;
+      } else {
+        _pendingImage = null;
       }
     });
   }
@@ -50,26 +53,21 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
     if (picked == null) return;
 
-    setState(() => _isUploadingPhoto = true);
-
-    await AuthService().uploadProfilePicture(File(picked.path));
-
-    if (!mounted) return;
-    setState(() => _isUploadingPhoto = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Profile Photo Updated"))
-    );
-
+    setState(() => _pendingImage = File(picked.path));
   }
 
-  Future<void> _saveUsername() async {
+  Future<void> _save() async {
     final newUsername = _usernameController.text.trim();
     if (newUsername.isEmpty) return;
 
     setState(() => _isSaving = true);
 
-    await AuthService().updateUsername(newUsername);
+    if (_pendingImage != null) {//uploads image
+      await AuthService().uploadProfilePicture(_pendingImage!);
+      _pendingImage = null;
+    }
+
+    await AuthService().updateUsername(newUsername);//updates username
 
     if (!mounted) return;
 
@@ -78,9 +76,12 @@ class _MyProfilePageState extends State<MyProfilePage> {
       _isEditing = false;
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Username updated")));
+    //notifier
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Profile Updated"),
+      ),
+    );
   }
 
   @override
@@ -112,8 +113,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                         .doc(user.uid)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      final data =
-                          snapshot.data?.data() as Map<String, dynamic>?;
+                      final data = snapshot.data?.data() as Map<String, dynamic>?;
                       final username = data?['username'] ?? '';
 
                       if (_isEditing) {
@@ -140,7 +140,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                                     ),
                                   )
                                 : IconButton(
-                                    onPressed: _saveUsername,
+                                    onPressed: _save,
                                     icon: const Icon(
                                       Icons.check,
                                       size: 28,
@@ -204,26 +204,15 @@ class _MyProfilePageState extends State<MyProfilePage> {
                                     _isUploadingPhoto ? const Center(child: CircularProgressIndicator())
                                     : ClipRRect(
                                       borderRadius: BorderRadius.circular(100),
-                                      child: (data?['profilePicUrl'] != null &&
-                                              data!['profilePicUrl'].toString().isNotEmpty)
-                                        ? Builder(builder: (context) {
-                                          final url = data['profilePicUrl'] as String;
-                                          //decodes the base64 for the image
-                                          if (url.startsWith('data:image')) {
-                                            final base64Str = url.split(',').last;
-                                            final bytes = base64Decode(base64Str);
-                                            return Image.memory(
-                                              bytes,
-                                              fit: BoxFit.cover,
-                                              width: 200,
-                                              height: 200,
-                                            );
-                                          } return Image.network('null'); //if change to firestore then use Image.network
-                                      }) : Icon(
-                                          Icons.person_4_outlined,
-                                          size: 100,
-                                          color: Colors.grey.shade500,
-                                        ),
+                                      child: _pendingImage != null ? Image.file(
+                                        _pendingImage!,
+                                        fit: BoxFit.cover,
+                                        width: 200,
+                                        height: 200,
+                                      ) : MyProfileAvatar(
+                                        profileUrl: data?['profilePicUrl'] as String,
+                                        size: 200,
+                                      )
                                     )
                                   )
                                 ),
@@ -247,8 +236,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                             const SizedBox(height: 20),
 
                             // username text field in edit mode, plain text otherwise
-                            _isEditing
-                                ? Padding(
+                            _isEditing ? Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 60,
                               ),
@@ -300,9 +288,9 @@ class _MyProfilePageState extends State<MyProfilePage> {
                             Center(
                               child: Text(
                                 email,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.black54,
+                                  color: Theme.of(context).colorScheme.inversePrimary,
                                 ),
                               ),
                             ),

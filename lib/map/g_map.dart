@@ -896,6 +896,7 @@ class GMapState extends State<GMap> {
   Future<void> saveCompletedTerritoryRun({
     required Duration runTime,
     required String playerName,
+    String? runId,
   }) async {
     final Territory? selectedTerritory = _getSelectedTerritory();
 
@@ -946,6 +947,7 @@ class GMapState extends State<GMap> {
         'currentOwner': playerName,
         'fastestTimeSeconds': newRunSeconds,
         'updatedAt': FieldValue.serverTimestamp(),
+        'runId': runId,
       }, SetOptions(merge: true));
 
       _showTopMessage('Congratulations you are the New King/Queen of ${selectedTerritory.name}!');

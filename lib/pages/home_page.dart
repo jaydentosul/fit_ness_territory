@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fit_ness_territory/components/run_timer.dart';
 import 'package:fit_ness_territory/modes/modes.dart';
+import 'package:fit_ness_territory/services/run_service.dart';
 import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
 
@@ -130,11 +131,12 @@ class _HomePageState extends State<HomePage> {
     final double finalCalories = _calories;
     final String territoryName = _mapKey.currentState?.getSelectedTerritoryName() ?? 'Unknown';
 
-    await _runTimer.saveRun(territoryName);
+    final String? runId = await RunService().saveRun(elapsed.inSeconds, territoryName);
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(
-      runTime: elapsed,
       playerName: currentPlayerName,
+      runTime: elapsed,
+      runId: runId,
     );
 
     _runTimer.reset();
@@ -205,7 +207,7 @@ class _HomePageState extends State<HomePage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        // foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+        foregroundColor: Colors.black,
         title: const Text(
           'Homepage Page',
         ),

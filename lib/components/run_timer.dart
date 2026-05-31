@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../services/run_service.dart';
 
 class RunTimer {
   Duration _elapsedTime = Duration.zero;
@@ -27,13 +26,5 @@ class RunTimer {
   void reset() {
     _timer?.cancel();
     _elapsedTime = Duration.zero;
-  }
-
-  // save run to Firebase
-  // also can later include map/territory info here too?
-  Future<void> saveRun(String territoryName) async {
-    int seconds = _elapsedTime.inSeconds;
-
-    await RunService().saveRun(seconds, territoryName);
   }
 }

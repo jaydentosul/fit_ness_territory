@@ -12,9 +12,9 @@ class RunService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // saves the run time to firebase and updates user stats
-  Future<void> saveRun(int time, String territoryName) async {
+  Future<String?> saveRun(int time, String territoryName) async {
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) return '';
 
     final userRef = _db.collection('users').doc(user.uid);
 
@@ -29,15 +29,19 @@ class RunService {
         .where('userId', isEqualTo: user.uid)
         .where('territoryName', isEqualTo: territoryName)
         .get();
+
+    String? savedRunId;
+
     //save run of no run exists
     if (existingRun.docs.isEmpty) {
-      await _db.collection('runs').add({
+      final docRef = await _db.collection('runs').add({
         'userId': user.uid,
         'username': username,
         'time': time,
         'date': Timestamp.now(),
         'territoryName': territoryName,
       });
+      savedRunId = docRef.id;//captures the run ID
     } else {  //run exists, check fastestTime
       final existingDoc = existingRun.docs.first;
       final int existingTime = existingDoc.data()['time'] ?? 0;
@@ -49,6 +53,7 @@ class RunService {
           'username': username,
         });
       }
+      savedRunId = existingDoc.id;  //ID of existing run
     }
 
     // update totalRuns
@@ -67,5 +72,7 @@ class RunService {
         'bestRun': time,
       }, SetOptions(merge: true)); // this is overall best run for now, can change to per territory later
     }
+
+    return savedRunId;
   }
 }

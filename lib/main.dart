@@ -6,6 +6,7 @@ import 'package:fit_ness_territory/pages/my_profile_page.dart';
 import 'package:fit_ness_territory/pages/scoreboard_page.dart';
 import 'package:fit_ness_territory/pages/settings_page.dart';
 import 'package:fit_ness_territory/pages/report_page.dart';
+import 'package:fit_ness_territory/services/territory_setup_service.dart';
 import 'package:fit_ness_territory/themes/my_themes.dart';
 import 'package:fit_ness_territory/services/app_settings_service.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +14,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await TerritorySetupService().initializeTerritories();
 
   runApp(const MyApp());
 }

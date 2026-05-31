@@ -68,7 +68,8 @@ class MyScrollableDraggableSheet extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color:
+              Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -118,11 +119,11 @@ class MyScrollableDraggableSheet extends StatelessWidget {
 
     return DraggableScrollableSheet(
       controller: controller,
-      initialChildSize: 0.42,
-      minChildSize: 0.28,
-      maxChildSize: 0.70,
+      initialChildSize: 0.45,
+      minChildSize: 0.25,
+      maxChildSize: 0.60,
       snap: true,
-      snapSizes: const [0.28, 0.42, 0.70],
+      snapSizes: const [0.25, 0.45, 0.60],
 
       builder: (context, scrollController) {
         return Container(
@@ -205,7 +206,7 @@ class MyScrollableDraggableSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),

@@ -46,6 +46,8 @@ flutter:
     - assets/logo.png
     - assets/auckland_domain_track.png
     - assets/cornwall_park_track.png
+    - assets/shakespear_regional_park_track.png
+    - assets/waitakere_ranges_track.png
 
 flutter_icons:
   android: true

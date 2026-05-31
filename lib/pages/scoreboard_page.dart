@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../components/my_list.dart';
 
 /*
@@ -23,7 +22,7 @@ class ScoreboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -35,20 +34,20 @@ class ScoreboardPage extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        // actions: [
-        //   IconButton(
-        //     onPressed: () {
-        //
-        //     },
-        //     icon: Icon(Icons.refresh, size: 30,),
-        //   ),
-        // ],
+        actions: [ //refresh button
+          IconButton(
+            onPressed: () {
+              TerritorySyncService().syncTerritoryRecords(); //refreshes Leaderboard
+            },
+            icon: Icon(Icons.refresh, size: 30,),
+          ),
+        ],
       ),
 
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('territories')
-            .where('fastestTimeSeconds', isGreaterThan: 0)
+            .where('fastestTimeSeconds', isGreaterThanOrEqualTo: 0)
             .orderBy('fastestTimeSeconds')
             .snapshots(),
         builder: (context, snapshot) {
@@ -73,8 +72,9 @@ class ScoreboardPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final data = territories[index].data() as Map<String, dynamic>;
 
+              final String imageUrl = data['imageUrl'] ?? 'assets/auckland_domain_track.png';
               final String territoryName = data['territoryName'] ?? 'Unknown Territory';
-              final String ownerName = data['currentOwner'] ?? 'No owner yet';
+              final String ownerName = data['currentOwner'] ?? ' ';
               final dynamic fastestValue = data['fastestTimeSeconds'];
 
               int fastestTimeSeconds = 0;
@@ -88,7 +88,7 @@ class ScoreboardPage extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: MyListTerritory(
                   onTap: () {},
-                  imgPath: 'assets/auckland_domain_track.png', // placeholder for now
+                  imgPath: imageUrl,
                   territoryName: territoryName,
                   ownerName: ownerName,
                   bestTime: formatSeconds(fastestTimeSeconds),

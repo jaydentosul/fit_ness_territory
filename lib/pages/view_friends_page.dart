@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:fit_ness_territory/components/my_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -11,7 +10,7 @@ class ViewFriendPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -58,29 +57,10 @@ class ViewFriendPage extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(100),
-                      child: (data?['profilePicUrl'] != null &&
-                      data!['profilePicUrl'].toString().isNotEmpty)
-                      ? Builder(builder: (context) {
-                        final url = data['profilePicUrl'] as String;
-                      //decodes the base64 for the image
-                        if (url.startsWith('data:image')) {
-                          final base64Str = url
-                              .split(',')
-                              .last;
-                          final bytes = base64Decode(base64Str);
-                          return Image.memory(
-                            bytes,
-                            fit: BoxFit.cover,
-                            width: 200,
-                            height: 200,
-                          );
-                        }
-                        return Image.network('null'); //if change to firestore then use Image.network
-                      }) : Icon(
-                        Icons.person_4_outlined,
-                        size: 100,
-                        color: Colors.grey.shade500,
-                      ),
+                      child: MyProfileAvatar(
+                        profileUrl: data?['profilePicUrl'] as String,
+                        size: 200,
+                      )
                     ),
                   ),
                 ),
@@ -101,9 +81,9 @@ class ViewFriendPage extends StatelessWidget {
                 // email
                 Text(
                   email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black54,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
 

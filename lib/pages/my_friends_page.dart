@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:fit_ness_territory/components/my_profile_avatar.dart';
 import 'package:fit_ness_territory/pages/view_friends_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,22 +55,6 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
     );
   }
 
-  //method for reusing
-  Widget _buildAvatar(Map<String, dynamic>? data) {
-    final url = data?['profilePicUrl'] as String?;
-
-    if (url != null && url.isNotEmpty && url.startsWith('data:image')) {
-      final bytes = base64Decode(url.split(',').last);
-      return CircleAvatar(
-        backgroundImage: MemoryImage(bytes),
-      );
-    }
-
-    return const CircleAvatar(
-      child: Icon(Icons.person),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -109,12 +92,12 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
 
           const SizedBox(height: 8),
 
-          const Center(
+          Center(
             child: Text(
               "Search for users and add them to your friends list.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.black54,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
             ),
           ),
@@ -182,7 +165,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: ListTile(
-                          leading: _buildAvatar(data),
+                          leading: MyProfileAvatar(profileUrl: data['profilePicUrl'] as String, size: 50),
                           title: Text(data['username'] ?? 'Unknown'),
                           subtitle: Text(data['email'] ?? ''),
                           trailing: ElevatedButton(
@@ -289,7 +272,10 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                               ),
                             );
                           },
-                          leading: _buildAvatar(friendData),
+                          leading: MyProfileAvatar(
+                              profileUrl: friendData?['profilePicUrl'] as String,
+                              size: 50
+                          ),
                           title: Text(
                             username,
                             style: const TextStyle(

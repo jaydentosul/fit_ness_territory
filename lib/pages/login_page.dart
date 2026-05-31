@@ -217,13 +217,9 @@ class _LoginPageState extends State<LoginPage> {
                           if (user != null) {
 
                             // sync territories before home page
-                            TerritorySyncService()
-                                .syncTerritoryRecords();
+                            await TerritorySyncService().syncTerritoryRecords();
 
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/home_page',
-                            );
+                            Navigator.pushReplacementNamed(context, '/home_page',);
 
                           } else {
 
