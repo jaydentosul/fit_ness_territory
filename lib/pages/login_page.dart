@@ -27,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isTapped = false;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -34,14 +35,13 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 0,
       ),
 
       body: Center(
         child: SingleChildScrollView(
 
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
 
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: 35),
+                const SizedBox(height: 20),
 
                 // EMAIL FIELD
                 TextField(
@@ -153,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 15),
 
                 // BUTTONS
                 Row(
@@ -173,7 +173,6 @@ class _LoginPageState extends State<LoginPage> {
                           if (!mounted) return;
 
                           if (user != null) {
-
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text("Account Created"),
@@ -181,7 +180,6 @@ class _LoginPageState extends State<LoginPage> {
                             );
 
                           } else {
-
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text("Signup Failed"),
@@ -243,7 +241,35 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
+
+                GestureDetector(
+                  onTapDown: (_) => setState(() => isTapped = true),
+                  onTapUp: (_) => setState(() => isTapped = false),
+                  onTapCancel: () => setState(() => isTapped = false),
+                  onTap: () async {
+                    final email = getUserAcc.text.trim();
+                    if (email.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Enter your Email first"))
+                      ); return;
+                    }
+
+                    await _authService.sendPasswordReset(email);
+                    if(!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password reset email sent'))
+                    );
+                  },
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 100),
               ],
             ),
           ),

@@ -30,7 +30,11 @@ class AuthService {
           'bestRun': 0,
           'totalRuns': 0,
           'friends': [], // empty list for friends
-          'profilePicUrl': ''
+          'profilePicUrl': '',
+          'totalRunTime': 0,
+          'totalSteps': 0,
+          'distanceTravelled': 0.0,
+          'totalCalories': 0.0
         });
       }
 
@@ -39,6 +43,11 @@ class AuthService {
       print(e);
       return null;
     }
+  }
+
+  // sends password reset email
+  Future<void> sendPasswordReset(String email) async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
   }
 
   // logs in an existing user

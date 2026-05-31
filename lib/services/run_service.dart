@@ -12,7 +12,13 @@ class RunService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // saves the run time to firebase and updates user stats
-  Future<String?> saveRun(int time, String territoryName) async {
+  Future<String?> saveRun(
+      int time,
+      String territoryName,
+      int steps,
+      double distanceMeters,
+      double calories,
+    ) async {
     final user = _auth.currentUser;
     if (user == null) return '';
 
@@ -59,6 +65,10 @@ class RunService {
     // update totalRuns
     await userRef.set({
       'totalRuns': FieldValue.increment(1),
+      'totalRunTime': FieldValue.increment(time),
+      'totalSteps': FieldValue.increment(steps),
+      'distanceTravelled': FieldValue.increment(distanceMeters),
+      'totalCalories': FieldValue.increment(calories),
     }, SetOptions(merge: true));
 
     // get current bestRun

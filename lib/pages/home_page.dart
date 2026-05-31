@@ -131,7 +131,13 @@ class _HomePageState extends State<HomePage> {
     final double finalCalories = _calories;
     final String territoryName = _mapKey.currentState?.getSelectedTerritoryName() ?? 'Unknown';
 
-    final String? runId = await RunService().saveRun(elapsed.inSeconds, territoryName);
+    final String? runId = await RunService().saveRun(
+      elapsed.inSeconds,
+      territoryName,
+      _steps,
+      currentDistanceMetres,
+      _calories,
+    );
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(
       playerName: currentPlayerName,

@@ -44,13 +44,13 @@ class MyStatsList extends StatelessWidget{
               children: [
                 _myStatsTiles(
                   title: "Best Run",
-                  trailingText: "$bestRun sec",
+                  trailingText: formatSeconds(bestRun),
                   icon: Icons.emoji_events,
                 ),
 
                 _myStatsTiles(
                   title: "Total Run Time",
-                  trailingText: "$totalRunTime sec", // <--------- hook up fireBase
+                  trailingText: formatSeconds(totalRunTime), // <--------- hook up fireBase
                   icon: Icons.more_time,
                 ),
 
@@ -137,6 +137,13 @@ class MyStatsList extends StatelessWidget{
         style: const TextStyle(fontSize: 15),
       ),
     );
+  }
+
+  String formatSeconds(int seconds) {
+    if (seconds <= 0) return '--:--';
+    final mins = (seconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return "$mins:$secs";
   }
 
 }

@@ -60,7 +60,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -127,10 +127,12 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
           const SizedBox(height: 20),
 
           if (searchText.isEmpty)
-            const Center(
+            Center(
               child: Text(
                 "Search for a username to add a friend",
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
               ),
             ),
 

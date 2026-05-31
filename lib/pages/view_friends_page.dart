@@ -35,13 +35,10 @@ class ViewFriendPage extends StatelessWidget {
           final bestRun = data?['bestRun'] ?? 0;
           final totalRuns = data?['totalRuns'] ?? 0;
           final friends = List<String>.from(data?['friends'] ?? []);
-
-          String formatSeconds(int seconds) {
-            if (seconds <= 0) return '--:--';
-            final mins = (seconds ~/ 60).toString().padLeft(2, '0');
-            final secs = (seconds % 60).toString().padLeft(2, '0');
-            return "$mins:$secs";
-          }
+          final totalRunTime = data?['totalRunTime'] ?? 0;
+          final totalSteps = data?['totalSteps'] ?? 0;
+          final distanceTravelled = data?['distanceTravelled'] ?? 0.0;
+          final totalCalories = data?['totalCalories'] ?? 0.0;
 
           return SingleChildScrollView(
             child: Column(
@@ -92,12 +89,12 @@ class ViewFriendPage extends StatelessWidget {
 
                 MyStatsList(
                   bestRun: bestRun,
-                  totalRunTime: 6540,
+                  totalRunTime: totalRunTime,
                   totalRuns: totalRuns,
                   friends: friends.length,
-                  totalSteps: 54653,
-                  totalDistance: 4335,
-                  totalCalories: 23423.98,
+                  totalSteps: totalSteps,
+                  totalDistance: distanceTravelled,
+                  totalCalories: totalCalories,
                 ),
               ],
             ),
