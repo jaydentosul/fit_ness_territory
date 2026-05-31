@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fit_ness_territory/services/territory_sync_service.dart';
 import 'package:flutter/material.dart';
-import '../components/my_list.dart';
+import '../components/my_territory_list.dart';
 
 /*
 This is where we can build the UI for the territory leaderboard

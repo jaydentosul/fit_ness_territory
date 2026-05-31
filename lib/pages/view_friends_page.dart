@@ -2,6 +2,8 @@ import 'package:fit_ness_territory/components/my_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../components/my_stats_list.dart';
+
 class ViewFriendPage extends StatelessWidget {
   final String friendId;
 
@@ -34,8 +36,6 @@ class ViewFriendPage extends StatelessWidget {
           final totalRuns = data?['totalRuns'] ?? 0;
           final friends = List<String>.from(data?['friends'] ?? []);
 
-          final double leftRightPadding = 70.0;
-
           String formatSeconds(int seconds) {
             if (seconds <= 0) return '--:--';
             final mins = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -46,8 +46,9 @@ class ViewFriendPage extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // profile picture
-                Center(
+                const SizedBox(height: 18,),
+
+                Center(// profile picture
                   child: Container(
                     width: 200,
                     height: 200,
@@ -87,36 +88,16 @@ class ViewFriendPage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
 
-                ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: leftRightPadding),
-                  leading: const Icon(Icons.timer),
-                  title: const Text("Best Run"),
-                  trailing: Text(
-                    formatSeconds(bestRun),
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                ),
-
-                ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: leftRightPadding),
-                  leading: const Icon(Icons.directions_run),
-                  title: const Text("Total Runs"),
-                  trailing: Text(
-                    "$totalRuns",
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                ),
-
-                ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: leftRightPadding),
-                  leading: const Icon(Icons.people),
-                  title: const Text("Friends"),
-                  trailing: Text(
-                    "${friends.length}",
-                    style: const TextStyle(fontSize: 15),
-                  ),
+                MyStatsList(
+                  bestRun: bestRun,
+                  totalRunTime: 6540,
+                  totalRuns: totalRuns,
+                  friends: friends.length,
+                  totalSteps: 54653,
+                  totalDistance: 4335,
+                  totalCalories: 23423.98,
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fit_ness_territory/components/my_profile_avatar.dart';
+import 'package:fit_ness_territory/components/my_stats_list.dart';
 import 'package:fit_ness_territory/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -91,18 +92,16 @@ class _MyProfilePageState extends State<MyProfilePage> {
     // background shifts to a light blue tint when editing
     final bgColor = _isEditing
         ? Theme.of(context).colorScheme.inversePrimary
-        : Theme.of(context).colorScheme.surface;
+        : Theme.of(context).colorScheme.tertiary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       color: bgColor,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: bgColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          foregroundColor: _isEditing
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.inversePrimary,
+          foregroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Text(_isEditing ? 'Edit Profile' : 'My Profile Page'),
           actions: [
             user == null
@@ -179,14 +178,14 @@ class _MyProfilePageState extends State<MyProfilePage> {
                   final totalRuns = data?['totalRuns'] ?? 0;
                   final friends = List<String>.from(data?['friends'] ?? []);
 
-                  final double leftRightPadding = 70.0;
-
                   return SingleChildScrollView(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Column(
                           children: [
+                            SizedBox(height: 18,),
+
                             Stack (
                               alignment: Alignment.bottomRight,
                               children: [
@@ -293,47 +292,18 @@ class _MyProfilePageState extends State<MyProfilePage> {
                                   color: Theme.of(context).colorScheme.inversePrimary,
                                 ),
                               ),
-                            ),
+                            ),//email
 
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 25),
 
-                            ListTile(
-                              contentPadding: EdgeInsets.only(
-                                right: leftRightPadding,
-                                left: leftRightPadding,
-                              ),
-                              leading: const Icon(Icons.timer),
-                              title: const Text("Best Run"),
-                              trailing: Text(
-                                "$bestRun sec",
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                            ),
-
-                            ListTile(
-                              contentPadding: EdgeInsets.only(
-                                right: leftRightPadding,
-                                left: leftRightPadding,
-                              ),
-                              leading: const Icon(Icons.directions_run),
-                              title: const Text("Total Runs"),
-                              trailing: Text(
-                                "$totalRuns",
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                            ),
-
-                            ListTile(
-                              contentPadding: EdgeInsets.only(
-                                right: leftRightPadding,
-                                left: leftRightPadding,
-                              ),
-                              leading: const Icon(Icons.people),
-                              title: const Text("Friends"),
-                              trailing: Text(
-                                "${friends.length}",
-                                style: const TextStyle(fontSize: 15),
-                              ),
+                            MyStatsList(
+                              bestRun: bestRun,
+                              totalRunTime: 6540,
+                              totalRuns: totalRuns,
+                              friends: friends.length,
+                              totalSteps: 54653,
+                              totalDistance: 4335,
+                              totalCalories: 23423.98,
                             ),
                           ],
                         ),

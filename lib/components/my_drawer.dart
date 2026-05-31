@@ -1,4 +1,4 @@
-import 'package:fit_ness_territory/components/my_list.dart';
+import 'package:fit_ness_territory/components/my_territory_list.dart';
 import 'package:flutter/material.dart';
 
 class MyDrawer extends StatelessWidget {
