@@ -167,7 +167,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: ListTile(
-                          leading: MyProfileAvatar(profileUrl: data['profilePicUrl'] as String, size: 50),
+                          leading: MyProfileAvatar(profileUrl: data['profilePicUrl'] as String?, size: 50),
                           title: Text(data['username'] ?? 'Unknown'),
                           subtitle: Text(data['email'] ?? ''),
                           trailing: ElevatedButton(
@@ -275,7 +275,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                             );
                           },
                           leading: MyProfileAvatar(
-                              profileUrl: friendData?['profilePicUrl'] as String,
+                              profileUrl: friendData?['profilePicUrl'] as String?,
                               size: 50
                           ),
                           title: Text(

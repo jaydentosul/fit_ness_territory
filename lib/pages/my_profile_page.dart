@@ -213,7 +213,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                                         width: 200,
                                         height: 200,
                                       ) : MyProfileAvatar(
-                                        profileUrl: data?['profilePicUrl'] as String,
+                                        profileUrl: data?['profilePicUrl'] as String?,
                                         size: 200,
                                       )
                                     )

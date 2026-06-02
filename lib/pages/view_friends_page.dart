@@ -63,7 +63,7 @@ class ViewFriendPage extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(100),
                       child: MyProfileAvatar(
-                        profileUrl: data?['profilePicUrl'] as String,
+                        profileUrl: data?['profilePicUrl'] as String?,
                         size: 200,
                       )
                     ),

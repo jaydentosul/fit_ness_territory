@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class MyProfileAvatar extends StatelessWidget {
-  final String profileUrl;
+  final String? profileUrl;
   final double size;
 
   //constructor
@@ -30,7 +30,7 @@ class MyProfileAvatar extends StatelessWidget {
 
   Widget _buildImage() {
     //builds the image
-    final url = profileUrl;
+    final url = profileUrl ?? '';
 
     //check if url not empty
     if (url.isNotEmpty && url.startsWith('data:image')) {
