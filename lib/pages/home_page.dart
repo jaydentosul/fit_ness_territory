@@ -137,8 +137,8 @@ class _HomePageState extends State<HomePage> {
       elapsed.inSeconds,
       territoryName,
       _steps,
-      double.parse(finalCalories.toStringAsFixed(1)),
       double.parse(finalDistance.toStringAsFixed(1)),
+      double.parse(finalCalories.toStringAsFixed(1)),
     );
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(

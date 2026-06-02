@@ -77,7 +77,7 @@ class RunService {
     final bestRun = updatedData?['bestRun'] ?? 0;
 
     // update bestRun if faster
-    if (bestRun == 0 || time > bestRun) {
+    if (bestRun == 0 || time < bestRun) {
       await userRef.set({
         'bestRun': time,
       }, SetOptions(merge: true)); // this is overall best run for now, can change to per territory later
