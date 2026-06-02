@@ -129,6 +129,24 @@ class TerritorySyncService {
       }
     }
 
+    //updates the currentOwner if there was changes
+    for (final territoryDoc in allTerritories.docs) {
+      final data = territoryDoc.data();
+      final String existingRunId = data['runId']?.toString() ?? '';
+
+      if (existingRunId.isEmpty) continue;
+
+      final runDoc = await _db.collection('runs').doc(existingRunId).get();
+      if (!runDoc.exists) continue;
+
+      final String actualUsername = runDoc.data()?['username'] ?? '';
+      final String currentOwner = data['currentOwner'] ?? '';
+
+      if (actualUsername.isNotEmpty && actualUsername != currentOwner) {
+        await territoryDoc.reference.update({'currentOwner': actualUsername});
+      }
+    }
+
   }
 
   Future<void> syncRunUsernames() async {
