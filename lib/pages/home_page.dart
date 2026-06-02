@@ -124,20 +124,21 @@ class _HomePageState extends State<HomePage> {
 
   // When run stops, we can save everything here.
   Future<void> _stopRun() async {
+    final double finalDistance = currentDistanceMetres;
+    final double finalCalories = _calories;
+    final String currentPlayerName = currentUsername;
+    final String territoryName = _mapKey.currentState?.getSelectedTerritoryName() ?? 'Unknown';
+
     _mapKey.currentState?.stopTracking();
 
     lastRun = elapsed;
-
-    final String currentPlayerName = currentUsername;
-    final double finalCalories = _calories;
-    final String territoryName = _mapKey.currentState?.getSelectedTerritoryName() ?? 'Unknown';
 
     final String? runId = await RunService().saveRun(
       elapsed.inSeconds,
       territoryName,
       _steps,
-      currentDistanceMetres,
-      _calories,
+      double.parse(finalCalories.toStringAsFixed(1)),
+      double.parse(finalDistance.toStringAsFixed(1)),
     );
 
     await _mapKey.currentState?.saveCompletedTerritoryRun(
@@ -157,9 +158,8 @@ class _HomePageState extends State<HomePage> {
       runState = RunState.idle;
       elapsed = Duration.zero;
       currentDistanceMetres = 0.0;
-      currentUsername = currentPlayerName;
       _steps = 0;
-      _calories = finalCalories;
+      _calories = 0.0;
     });
 
     //animates the sheet when running
@@ -265,6 +265,7 @@ class _HomePageState extends State<HomePage> {
             key: _mapKey,
             onDistanceChanged: (distance) {
               if (!mounted) return;
+              if (runState != RunState.running) return;
               setState(() {
                 currentDistanceMetres = distance;
                 _calories = (distance / 1000) * 60; //calculates calories based on distance

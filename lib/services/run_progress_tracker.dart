@@ -46,7 +46,7 @@ class RunProgressTracker {
       newPosition.longitude,
     );
 
-    if (addedDistance >= 1.0) {
+    if (addedDistance >= 5.0) {
       _totalDistanceMetres += addedDistance;
     }
 

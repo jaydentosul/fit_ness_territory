@@ -102,8 +102,8 @@ class StartRunButton extends StatelessWidget {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
 
     final hrs = twoDigits(d.inHours);
-    final mins = twoDigits(d.inMinutes);
-    final secs = twoDigits(d.inSeconds);
+    final mins = twoDigits(d.inMinutes.remainder(60));
+    final secs = twoDigits(d.inSeconds.remainder(60));
 
     return '$hrs:$mins:$secs';
   }

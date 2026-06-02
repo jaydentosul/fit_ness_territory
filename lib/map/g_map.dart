@@ -583,7 +583,7 @@ class GMapState extends State<GMap> {
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 3,
+      distanceFilter: 8,
     );
 
     _positionStream =
