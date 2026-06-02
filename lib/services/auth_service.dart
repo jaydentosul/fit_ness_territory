@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fit_ness_territory/services/territory_sync_service.dart';
 
 // handles firebase login and signup
 // Also saves new user details into firestore
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -80,6 +80,9 @@ class AuthService {
 
       //delete user data frm firestore first
       await _db.collection('users').doc(user.uid).delete();
+
+      //refreshes the scoreBoard
+      TerritorySyncService().syncTerritoryRecords();
 
       //then delete the login/auth accounts
       await user.delete();

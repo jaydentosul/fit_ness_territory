@@ -48,7 +48,7 @@ class ScoreboardPage extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('territories')
             .where('fastestTimeSeconds', isGreaterThanOrEqualTo: 0)
-            .orderBy('fastestTimeSeconds')
+            .orderBy('territoryName')
             .snapshots(),
         builder: (context, snapshot) {
 

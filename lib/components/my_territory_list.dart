@@ -57,7 +57,7 @@ class MyListTerritory extends StatelessWidget {
           height: 130,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(60),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -70,10 +70,10 @@ class MyListTerritory extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(80),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.76),
+                      color: Colors.black.withValues(alpha: 0.16),
                       blurRadius: 2,
                       offset: Offset(1, 4),
                     )
@@ -81,7 +81,7 @@ class MyListTerritory extends StatelessWidget {
                 ),
                 child:
                 ClipRRect(
-                  borderRadius: BorderRadiusGeometry.circular(20),
+                  borderRadius: BorderRadiusGeometry.circular(80),
                   child: imgPath.startsWith('assets/')
                       ? Image.asset(imgPath, width: 110, height: 110, fit: BoxFit.cover,
                   ) : Image.network(imgPath, fit: BoxFit.cover,
@@ -118,7 +118,7 @@ class MyListTerritory extends StatelessWidget {
 
 
                       Container(
-                        width: double.infinity,
+                        width: 200,
                         padding: EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.tertiary,
@@ -159,10 +159,10 @@ class MyListTerritory extends StatelessWidget {
                                   fontSize: 17,
                                   overflow: TextOverflow.ellipsis,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.yellow,
+                                  color: Colors.grey.shade600,
                                   shadows: [
                                     Shadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
+                                        color: Colors.black.withValues(alpha: 0.1),
                                         blurRadius: 2,
                                         offset: Offset(2, 2)
                                     )

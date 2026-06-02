@@ -14,6 +14,9 @@ class TerritorySyncService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    //sync usernames in the each run documents
+    await syncRunUsernames();
+
     final runsWithTerritoryName = await _db
         .collection('runs')
         .where('territoryName', isGreaterThan: '')
@@ -123,6 +126,28 @@ class TerritorySyncService {
             'runId': ''
           });
         }
+      }
+    }
+
+  }
+
+  Future<void> syncRunUsernames() async {
+    final allRuns = await _db.collection('runs').get();
+
+    for (final runDoc in allRuns.docs) {
+      final data = runDoc.data();
+      final String userId = data['userId'] ?? '';
+      final String storedUsername = data['username'] ?? '';
+
+      if (userId.isEmpty) continue;
+
+      final userDoc = await _db.collection('users').doc(userId).get();
+      if (!userDoc.exists) continue;
+
+      final String actualUsername = userDoc.data()?['username'] ?? '';
+
+      if (actualUsername.isNotEmpty && actualUsername != storedUsername) {
+        await runDoc.reference.update({'username': actualUsername});
       }
     }
   }
